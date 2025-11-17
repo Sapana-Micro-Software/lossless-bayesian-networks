@@ -9,7 +9,7 @@ BayesianNetworkVisualizer.app
 
 # Node.js
 node_modules/
-package-lock.json
+# package-lock.json should be committed for reproducible builds
 
 # Jekyll
 _site/
