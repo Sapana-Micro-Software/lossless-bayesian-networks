@@ -39,18 +39,28 @@ jobs:
           cache: 'npm'
 
       - name: Install npm dependencies
-        run: npm ci
+        run: |
+          if [ -f "package-lock.json" ]; then
+            npm ci
+          else
+            echo "⚠️  package-lock.json not found, using npm install"
+            npm install
+          fi
 
       - name: Compile TypeScript
         run: npm run build
+        continue-on-error: false
 
       - name: Verify compiled JavaScript
         run: |
           if [ ! -f "assets/js/main.js" ]; then
-            echo "Error: main.js not found after compilation"
+            echo "❌ Error: main.js not found after compilation"
+            echo "Checking TypeScript compilation output..."
+            ls -la assets/js/ || echo "assets/js directory does not exist"
             exit 1
           fi
           echo "✓ TypeScript compiled successfully"
+          ls -lh assets/js/main.js
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -63,25 +73,35 @@ jobs:
 
       - name: Build Jekyll site
         run: |
-          bundle exec jekyll build --baseurl /lossless-bayesian-networks
+          bundle exec jekyll build --baseurl /lossless-bayesian-networks --trace
+        continue-on-error: false
 
       - name: Ensure .nojekyll exists
         run: |
           touch _site/.nojekyll || true
+          echo "✓ .nojekyll file ensured"
 
       - name: Verify build output
         run: |
           if [ ! -d "_site" ]; then
-            echo "Error: _site directory not found"
+            echo "❌ Error: _site directory not found"
+            echo "Checking for build errors..."
             exit 1
           fi
           if [ ! -f "_site/index.html" ]; then
-            echo "Error: index.html not found in _site"
+            echo "❌ Error: index.html not found in _site"
+            echo "Build directory contents:"
+            ls -la _site/ || true
             exit 1
           fi
           echo "✓ Jekyll build successful"
-          echo "Build contents:"
+          echo "Build contents (first 20 items):"
           ls -la _site/ | head -20
+          echo ""
+          echo "Checking critical files:"
+          [ -f "_site/index.html" ] && echo "✓ index.html exists" || echo "❌ index.html missing"
+          [ -f "_site/assets/js/main.js" ] && echo "✓ main.js exists" || echo "⚠️  main.js missing"
+          [ -f "_site/assets/css/main.css" ] && echo "✓ main.css exists" || echo "⚠️  main.css missing"
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -90,6 +110,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./_site
+          retention-days: 1
 
   deploy:
     environment:
