@@ -22,8 +22,9 @@ class Navigation {
     private init(): void {
         // Mobile menu toggle
         if (this.navToggle && this.navMenu) {
+            const navMenu = this.navMenu;
             this.navToggle.addEventListener('click', () => {
-                this.navMenu.classList.toggle('active');
+                navMenu.classList.toggle('active');
             });
         }
 
@@ -36,9 +37,7 @@ class Navigation {
                     const target = document.querySelector(href);
                     if (target) {
                         target.scrollIntoView({ behavior: 'smooth' });
-                        if (this.navMenu) {
-                            this.navMenu.classList.remove('active');
-                        }
+                        this.navMenu?.classList.remove('active');
                     }
                 }
             });

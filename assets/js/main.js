@@ -28,9 +28,7 @@ class Navigation {
                     const target = document.querySelector(href);
                     if (target) {
                         target.scrollIntoView({ behavior: 'smooth' });
-                        if (this.navMenu) {
-                            this.navMenu.classList.remove('active');
-                        }
+                        this.navMenu?.classList.remove('active');
                     }
                 }
             });
