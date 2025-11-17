@@ -1,0 +1,590 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{longtable}
+\geometry{margin=1in}
+
+\title{Reference Manual: Lossless Bayesian Network}
+\subtitle{Complete API Documentation}
+\author{Shyamal Chandra}
+\date{2025}
+
+\lstset{
+    language=C++,
+    basicstyle=\small\ttfamily,
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny,
+    stepnumber=1,
+    numbersep=5pt,
+    frame=single,
+    breaklines=true
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This reference manual provides complete API documentation for the Lossless Bayesian Network implementation. It includes detailed descriptions of all classes, methods, parameters, return values, and usage examples.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+This reference manual documents the complete API of the Lossless Bayesian Network implementation. All classes, methods, and their usage are described in detail.
+
+\section{Header Files}
+
+\subsection{node.hpp}
+
+Defines the \texttt{Node} class representing a variable in the Bayesian network.
+
+\subsection{cpt.hpp}
+
+Defines the \texttt{ConditionalProbabilityTable} class for storing conditional probability distributions.
+
+\subsection{bayesian\_network.hpp}
+
+Defines the \texttt{BayesianNetwork} class, the main interface for working with Bayesian networks.
+
+\section{Node Class}
+
+\subsection{Overview}
+
+The \texttt{Node} class represents a variable in the Bayesian network with its possible states and parent relationships.
+
+\subsection{Public Members}
+
+\begin{longtable}{|p{3cm}|p{2cm}|p{9cm}|}
+\hline
+\textbf{Member} & \textbf{Type} & \textbf{Description} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Member} & \textbf{Type} & \textbf{Description} \\
+\hline
+\endhead
+\hline
+\texttt{name} & \texttt{std::string} & Variable name identifier \\
+\hline
+\texttt{states} & \texttt{std::vector<std::string>} & Vector of possible state names \\
+\hline
+\texttt{parentIds} & \texttt{std::set<std::string>} & Set of parent node IDs \\
+\hline
+\texttt{stateIndexMap} & \texttt{std::map<std::string, int>} & Map from state names to indices \\
+\hline
+\end{longtable}
+
+\subsection{Constructors}
+
+\subsubsection{Node()}
+
+Default constructor. Creates an empty node.
+
+\textbf{Parameters:} None
+
+\textbf{Returns:} Node instance
+
+\subsubsection{Node(const std::string\& nodeName, const std::vector<std::string>\& nodeStates)}
+
+Constructor with name and states.
+
+\textbf{Parameters:}
+\begin{itemize}
+    \item \texttt{nodeName}: Name of the node
+    \item \texttt{nodeStates}: Vector of possible state names
+\end{itemize}
+
+\textbf{Returns:} Node instance with initialized states
+
+\subsection{Methods}
+
+\subsubsection{getStateIndex(const std::string\& stateName) const}
+
+Get the index of a state by name.
+
+\textbf{Parameters:}
+\begin{itemize}
+    \item \texttt{stateName}: Name of the state
+\end{itemize}
+
+\textbf{Returns:} Index of the state (0-based), or -1 if not found
+
+\textbf{Example:}
+\begin{lstlisting}
+Node node("Disease", {"None", "Cold", "Flu"});
+int idx = node.getStateIndex("Cold");  // Returns 1
+\end{lstlisting}
+
+\subsubsection{hasState(const std::string\& stateName) const}
+
+Check if a state exists.
+
+\textbf{Parameters:}
+\begin{itemize}
+    \item \texttt{stateName}: Name of the state
+\end{itemize}
+
+\textbf{Returns:} \texttt{true} if state exists, \texttt{false} otherwise
+
+\subsubsection{getNumStates() const}
+
+Get number of possible states.
+
+\textbf{Parameters:} None
+
+\textbf{Returns:} Number of states
+
+\subsubsection{addParent(const std::string\& parentId)}
+
+Add a parent node.
+
+\textbf{Parameters:}
+\begin{itemize}
+    \item \texttt{parentId}: ID of the parent node
+\end{itemize}
+
+\textbf{Returns:} void
+
+\subsubsection{removeParent(const std::string\& parentId)}
+
+Remove a parent node.
+
+\textbf{Parameters:}
+\begin{itemize}
+    \item \texttt{parentId}: ID of the parent node
+\end{itemize}
+
+\textbf{Returns:} void
+
+\subsubsection{hasParent(const std::string\& parentId) const}
+
+Check if node has a specific parent.
+
+\textbf{Parameters:}
+\begin{itemize}
+    \item \texttt{parentId}: ID of the parent node
+\end{itemize}
+
+\textbf{Returns:} \texttt{true} if parent exists, \texttt{false} otherwise
+
+\subsubsection{getNumParents() const}
+
+Get number of parent nodes.
+
+\textbf{Parameters:} None
+
+\textbf{Returns:} Number of parents
+
+\section{ConditionalProbabilityTable Class}
+
+\subsection{Overview}
+
+The \texttt{ConditionalProbabilityTable} class stores conditional probabilities in a lossless, exact representation using multi-dimensional indexing.
+
+\subsection{Constructors}
+
+\subsubsection{ConditionalProbabilityTable()}
+
+Default constructor. Creates an empty CPT.
+
+\textbf{Parameters:} None
+
+\textbf{Returns:} CPT instance
+
+\subsubsection{ConditionalProbabilityTable(const std::vector<size\_t>\& dims)}
+
+Constructor with dimensions.
+
+\textbf{Parameters:}
+\begin{itemize}
+    \item \texttt{dims}: Vector of dimensions (last is node, others are parents)
+\end{itemize}
+
+\textbf{Returns:} CPT instance with initialized dimensions
+
+\textbf{Example:}
+\begin{lstlisting}
+// CPT for node with 2 parents (3 states each) and 2 node states
+std::vector<size_t> dims = {3, 3, 2};
+ConditionalProbabilityTable cpt(dims);
+\end{lstlisting}
+
+\subsection{Methods}
+
+\subsubsection{setProbability(const std::vector<size\_t>\& parentStates, size\_t nodeState, double prob)}
+
+Set probability for given parent and node state indices.
+
+\textbf{Parameters:}
+\begin{itemize}
+    \item \texttt{parentStates}: Vector of parent state indices
+    \item \texttt{nodeState}: Index of node state
+    \item \texttt{prob}: Probability value (must be in [0, 1])
+\end{itemize}
+
+\textbf{Returns:} void
+
+\textbf{Throws:} \texttt{std::runtime\_error} if probability is out of range or indices are invalid
+
+\textbf{Example:}
+\begin{lstlisting}
+// P(node=1 | parent1=0, parent2=2) = 0.75
+cpt.setProbability({0, 2}, 1, 0.75);
+\end{lstlisting}
+
+\subsubsection{getProbability(const std::vector<size\_t>\& parentStates, size\_t nodeState) const}
+
+Get probability for given parent and node state indices.
+
+\textbf{Parameters:}
+\begin{itemize}
+    \item \texttt{parentStates}: Vector of parent state indices
+    \item \texttt{nodeState}: Index of node state
+\end{itemize}
+
+\textbf{Returns:} Probability value
+
+\textbf{Throws:} \texttt{std::runtime\_error} if indices are invalid
+
+\subsubsection{normalize()}
+
+Normalize probabilities for each parent configuration. Ensures each conditional distribution sums to 1.0.
+
+\textbf{Parameters:} None
+
+\textbf{Returns:} void
+
+\textbf{Example:}
+\begin{lstlisting}
+cpt.setProbability({0}, 0, 0.6);
+cpt.setProbability({0}, 1, 0.4);
+cpt.normalize();  // Ensures sum = 1.0
+\end{lstlisting}
+
+\subsubsection{isValid(double tolerance = 1e-6) const}
+
+Validate that all conditional distributions sum to 1.0.
+
+\textbf{Parameters:}
+\begin{itemize}
+    \item \texttt{tolerance}: Tolerance for floating point comparison (default: 1e-6)
+\end{itemize}
+
+\textbf{Returns:} \texttt{true} if valid, \texttt{false} otherwise
+
+\subsubsection{getDimensions() const}
+
+Get dimensions of the CPT.
+
+\textbf{Parameters:} None
+
+\textbf{Returns:} Vector of dimensions
+
+\subsubsection{getTotalSize() const}
+
+Get total number of probability entries.
+
+\textbf{Parameters:} None
+
+\textbf{Returns:} Total size
+
+\section{BayesianNetwork Class}
+
+\subsection{Overview}
+
+The \texttt{BayesianNetwork} class is the main interface for working with Bayesian networks. It provides network construction, inference, and I/O capabilities.
+
+\subsection{Constructors}
+
+\subsubsection{BayesianNetwork()}
+
+Default constructor. Creates an empty network.
+
+\textbf{Parameters:} None
+
+\textbf{Returns:} BayesianNetwork instance
+
+\subsection{Network Construction Methods}
+
+\subsubsection{addNode(const std::string\& nodeId, const std::string\& nodeName, const std::vector<std::string>\& states)}
+
+Add a node to the network.
+
+\textbf{Parameters:}
+\begin{itemize}
+    \item \texttt{nodeId}: Unique identifier for the node
+    \item \texttt{nodeName}: Name of the node
+    \item \texttt{states}: Vector of possible state names
+\end{itemize}
+
+\textbf{Returns:} void
+
+\textbf{Throws:} \texttt{std::runtime\_error} if node ID already exists
+
+\textbf{Example:}
+\begin{lstlisting}
+network.addNode("Disease", "Disease", {"None", "Cold", "Flu"});
+\end{lstlisting}
+
+\subsubsection{addEdge(const std::string\& parentId, const std::string\& childId)}
+
+Add an edge from parent to child.
+
+\textbf{Parameters:}
+\begin{itemize}
+    \item \texttt{parentId}: ID of parent node
+    \item \texttt{childId}: ID of child node
+\end{itemize}
+
+\textbf{Returns:} void
+
+\textbf{Throws:} \texttt{std::runtime\_error} if:
+\begin{itemize}
+    \item Parent or child node does not exist
+    \item Adding edge would create a cycle
+    \item Attempting to add self-loop
+\end{itemize}
+
+\textbf{Example:}
+\begin{lstlisting}
+network.addEdge("Disease", "Symptom");
+\end{lstlisting}
+
+\subsubsection{setCPT(const std::string\& nodeId, const ConditionalProbabilityTable\& cpt)}
+
+Set conditional probability table for a node.
+
+\textbf{Parameters:}
+\begin{itemize}
+    \item \texttt{nodeId}: ID of the node
+    \item \texttt{cpt}: Conditional probability table
+\end{itemize}
+
+\textbf{Returns:} void
+
+\textbf{Throws:} \texttt{std::runtime\_error} if node does not exist
+
+\subsection{Inference Methods}
+
+\subsubsection{getConditionalProbability(const std::string\& nodeId, const std::string\& nodeState, const std::map<std::string, std::string>\& parentStates) const}
+
+Get conditional probability.
+
+\textbf{Parameters:}
+\begin{itemize}
+    \item \texttt{nodeId}: ID of the node
+    \item \texttt{nodeState}: State of the node
+    \item \texttt{parentStates}: Map of parent IDs to their states
+\end{itemize}
+
+\textbf{Returns:} Conditional probability P(nodeState | parentStates)
+
+\textbf{Throws:} \texttt{std::runtime\_error} if:
+\begin{itemize}
+    \item Node does not exist
+    \item CPT not set for node
+    \item Missing or invalid parent states
+    \item Invalid node state
+\end{itemize}
+
+\subsubsection{computeJointProbability(const std::map<std::string, std::string>\& assignment) const}
+
+Compute joint probability for a full assignment.
+
+\textbf{Parameters:}
+\begin{itemize}
+    \item \texttt{assignment}: Map of node IDs to their states
+\end{itemize}
+
+\textbf{Returns:} Joint probability P(assignment)
+
+\textbf{Throws:} \texttt{std::runtime\_error} if assignment is incomplete
+
+\textbf{Example:}
+\begin{lstlisting}
+std::map<std::string, std::string> assignment;
+assignment["Disease"] = "Flu";
+assignment["Symptom"] = "Yes";
+double prob = network.computeJointProbability(assignment);
+\end{lstlisting}
+
+\subsubsection{variableElimination(const std::vector<std::string>\& queryNodes, const std::map<std::string, std::string>\& evidence) const}
+
+Variable elimination for exact inference.
+
+\textbf{Parameters:}
+\begin{itemize}
+    \item \texttt{queryNodes}: Vector of node IDs to query
+    \item \texttt{evidence}: Map of observed node IDs to their states
+\end{itemize}
+
+\textbf{Returns:} Map from query assignments to their probabilities (normalized)
+
+\textbf{Example:}
+\begin{lstlisting}
+std::map<std::string, std::string> evidence;
+evidence["Symptom"] = "Yes";
+std::vector<std::string> query = {"Disease"};
+auto results = network.variableElimination(query, evidence);
+\end{lstlisting}
+
+\subsection{Utility Methods}
+
+\subsubsection{getNode(const std::string\& nodeId) const}
+
+Get node by ID.
+
+\textbf{Parameters:}
+\begin{itemize}
+    \item \texttt{nodeId}: ID of the node
+\end{itemize}
+
+\textbf{Returns:} Const reference to the node
+
+\textbf{Throws:} \texttt{std::runtime\_error} if node does not exist
+
+\subsubsection{getNodeIds() const}
+
+Get all node IDs.
+
+\textbf{Parameters:} None
+
+\textbf{Returns:} Vector of node IDs
+
+\subsubsection{generateAssignments(const std::vector<std::string>\& nodeIds, std::vector<std::map<std::string, std::string>\& assignments) const}
+
+Generate all possible assignments for given nodes.
+
+\textbf{Parameters:}
+\begin{itemize}
+    \item \texttt{nodeIds}: Vector of node IDs
+    \item \texttt{assignments}: Output vector of assignments
+\end{itemize}
+
+\textbf{Returns:} void
+
+\textbf{Throws:} \texttt{std::runtime\_error} if any node does not exist
+
+\subsection{File I/O Methods}
+
+\subsubsection{saveToFile(const std::string\& filename) const}
+
+Save network to file.
+
+\textbf{Parameters:}
+\begin{itemize}
+    \item \texttt{filename}: Output filename
+\end{itemize}
+
+\textbf{Returns:} void
+
+\textbf{Throws:} \texttt{std::runtime\_error} if file cannot be opened
+
+\subsubsection{loadFromFile(const std::string\& filename)}
+
+Load network from file.
+
+\textbf{Parameters:}
+\begin{itemize}
+    \item \texttt{filename}: Input filename
+\end{itemize}
+
+\textbf{Returns:} void
+
+\textbf{Throws:} \texttt{std::runtime\_error} if file cannot be loaded
+
+\section{Error Handling}
+
+All methods that can fail throw \texttt{std::runtime\_error} exceptions with descriptive error messages. Common error conditions include:
+
+\begin{itemize}
+    \item Node does not exist
+    \item Invalid state names
+    \item Cycle detection (invalid DAG)
+    \item Invalid probability values
+    \item Missing CPTs
+    \item File I/O errors
+\end{itemize}
+
+\section{Usage Examples}
+
+\subsection{Complete Example}
+
+\begin{lstlisting}
+#include "bayesian_network.hpp"
+#include <iostream>
+
+int main() {
+    BayesianNetwork network;
+    
+    // Add nodes
+    network.addNode("Disease", "Disease", {"None", "Cold", "Flu"});
+    network.addNode("Symptom", "Fever", {"No", "Yes"});
+    
+    // Add edge
+    network.addEdge("Disease", "Symptom");
+    
+    // Create CPT
+    std::vector<size_t> dims = {3, 2};
+    ConditionalProbabilityTable cpt(dims);
+    cpt.setProbability({0}, 0, 0.9);  // P(No|None)
+    cpt.setProbability({0}, 1, 0.1);  // P(Yes|None)
+    cpt.setProbability({1}, 0, 0.7);  // P(No|Cold)
+    cpt.setProbability({1}, 1, 0.3);  // P(Yes|Cold)
+    cpt.setProbability({2}, 0, 0.2);  // P(No|Flu)
+    cpt.setProbability({2}, 1, 0.8);   // P(Yes|Flu)
+    cpt.normalize();
+    network.setCPT("Symptom", cpt);
+    
+    // Prior for Disease
+    std::vector<size_t> diseaseDims = {3};
+    ConditionalProbabilityTable diseaseCPT(diseaseDims);
+    diseaseCPT.setProbability({}, 0, 0.7);
+    diseaseCPT.setProbability({}, 1, 0.2);
+    diseaseCPT.setProbability({}, 2, 0.1);
+    diseaseCPT.normalize();
+    network.setCPT("Disease", diseaseCPT);
+    
+    // Inference
+    std::map<std::string, std::string> evidence;
+    evidence["Symptom"] = "Yes";
+    std::vector<std::string> query = {"Disease"};
+    auto results = network.variableElimination(query, evidence);
+    
+    // Display results
+    for (const auto& pair : results) {
+        std::cout << "P(Disease=" << pair.first.at("Disease")
+                  << ") = " << pair.second << std::endl;
+    }
+    
+    return 0;
+}
+\end{lstlisting}
+
+\section{Performance Notes}
+
+\begin{itemize}
+    \item Variable elimination has exponential time complexity in the worst case
+    \item CPT storage is exponential in the number of parents
+    \item Topological ordering minimizes computation during inference
+    \item State lookup is O(1) via hash maps
+\end{itemize}
+
+\section{Copyright}
+
+Copyright (C) 2025, Shyamal Chandra
+
+\end{document}

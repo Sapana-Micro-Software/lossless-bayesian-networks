@@ -1,0 +1,375 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\title{Lossless Bayesian Network Implementation}
+\subtitle{Exact Probabilistic Inference in C++}
+\author{Shyamal Chandra}
+\date{2025}
+\institute{}
+
+\lstset{
+    language=C++,
+    basicstyle=\tiny\ttfamily,
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny,
+    stepnumber=1,
+    numbersep=5pt,
+    frame=single,
+    breaklines=true
+}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}
+\frametitle{Overview}
+\tableofcontents
+\end{frame}
+
+\section{Introduction}
+
+\begin{frame}
+\frametitle{What is a Bayesian Network?}
+\begin{itemize}
+    \item Probabilistic graphical model
+    \item Represents variables and their conditional dependencies
+    \item Directed Acyclic Graph (DAG) structure
+    \item Enables efficient probabilistic reasoning
+\end{itemize}
+
+\vspace{0.5cm}
+\begin{center}
+\textbf{Joint Distribution Factorization:}
+\[
+P(X_1, \ldots, X_n) = \prod_{i=1}^{n} P(X_i | \text{Pa}(X_i))
+\]
+\end{center}
+\end{frame}
+
+\begin{frame}
+\frametitle{What Does "Lossless" Mean?}
+\begin{itemize}
+    \item \textbf{Exact computation}: No approximation in probability calculations
+    \item \textbf{Full precision}: All probability values maintained exactly
+    \item \textbf{Complete information}: No loss of probabilistic information
+    \item \textbf{Deterministic results}: Same inputs always produce same outputs
+\end{itemize}
+
+\vspace{0.5cm}
+\begin{block}{Key Advantage}
+Unlike approximate methods (MCMC, variational inference), lossless methods provide exact results, crucial for applications requiring precision.
+\end{block}
+\end{frame}
+
+\section{Architecture}
+
+\begin{frame}
+\frametitle{System Architecture}
+\begin{columns}
+\column{0.5\textwidth}
+\textbf{Core Components:}
+\begin{itemize}
+    \item \texttt{Node} class
+    \begin{itemize}
+        \item Variable representation
+        \item State management
+        \item Parent relationships
+    \end{itemize}
+    \item \texttt{CPT} class
+    \begin{itemize}
+        \item Conditional probabilities
+        \item Multi-dimensional storage
+        \item Normalization
+    \end{itemize}
+    \item \texttt{BayesianNetwork} class
+    \begin{itemize}
+        \item Network construction
+        \item Inference algorithms
+        \item File I/O
+    \end{itemize}
+\end{itemize}
+
+\column{0.5\textwidth}
+\begin{center}
+\includegraphics[width=0.8\textwidth]{network_structure.pdf}
+\footnotesize{(Conceptual diagram)}
+\end{center}
+\end{columns}
+\end{frame}
+
+\begin{frame}
+\frametitle{Node Structure}
+\begin{lstlisting}
+class Node {
+    std::string name;                    // Variable name
+    std::vector<std::string> states;     // Possible states
+    std::set<std::string> parentIds;    // Parent nodes
+    std::map<std::string, int> stateIndexMap;  // Fast lookup
+};
+\end{lstlisting}
+
+\vspace{0.3cm}
+\textbf{Features:}
+\begin{itemize}
+    \item Fast state lookup: O(1) via hash map
+    \item Parent tracking for DAG structure
+    \item Flexible state definitions
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Conditional Probability Table}
+\begin{lstlisting}
+class ConditionalProbabilityTable {
+    std::vector<double> probabilities;  // Flat storage
+    std::vector<size_t> dimensions;     // Multi-dim sizes
+    std::vector<size_t> strides;        // Indexing strides
+};
+\end{lstlisting}
+
+\vspace{0.3cm}
+\textbf{Multi-dimensional Indexing:}
+\[
+\text{index} = \sum_{k=0}^{n-1} i_k \cdot \text{stride}_k
+\]
+
+\textbf{Features:}
+\begin{itemize}
+    \item Efficient storage in flat array
+    \item Automatic normalization
+    \item Validation of probability distributions
+\end{itemize}
+\end{frame}
+
+\section{Algorithms}
+
+\begin{frame}
+\frametitle{Topological Sorting}
+\textbf{Kahn's Algorithm:}
+\begin{enumerate}
+    \item Compute in-degrees for all nodes
+    \item Initialize queue with nodes (in-degree = 0)
+    \item While queue not empty:
+    \begin{itemize}
+        \item Remove node from queue
+        \item Decrease in-degree of children
+        \item Add children with in-degree = 0 to queue
+    \end{itemize}
+    \item If processed nodes $<$ total nodes: \textbf{CYCLE DETECTED}
+\end{enumerate}
+
+\vspace{0.3cm}
+\begin{block}{Purpose}
+Ensures DAG property and provides ordering for efficient inference.
+\end{block}
+\end{frame}
+
+\begin{frame}
+\frametitle{Variable Elimination}
+\textbf{Exact Inference Algorithm:}
+
+\begin{enumerate}
+    \item \textbf{Query}: Variables of interest $Q$
+    \item \textbf{Evidence}: Observed variables $E = e$
+    \item \textbf{Hidden}: Variables to sum out $H$
+    \item Compute: $P(Q | E = e) = \frac{\sum_H P(Q, E=e, H)}{\sum_{Q,H} P(Q, E=e, H)}$
+\end{enumerate}
+
+\vspace{0.3cm}
+\begin{block}{Complexity}
+Exponential in the number of variables, but exact results.
+\end{block}
+\end{frame}
+
+\section{Examples}
+
+\begin{frame}
+\frametitle{Medical Diagnosis Example}
+\begin{columns}
+\column{0.5\textwidth}
+\textbf{Network Structure:}
+\begin{itemize}
+    \item \texttt{Disease} $\rightarrow$ \texttt{Fever}
+    \item \texttt{Disease} $\rightarrow$ \texttt{Cough}
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Inference:}
+Given: Fever=Yes, Cough=Yes\\
+Query: P(Disease)?
+
+\column{0.5\textwidth}
+\begin{block}{Results}
+\begin{itemize}
+    \item P(Disease=None) = 0.001
+    \item P(Disease=Cold) = 0.234
+    \item P(Disease=Flu) = 0.765
+\end{itemize}
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}
+\frametitle{Alarm Network Example}
+\begin{center}
+\textbf{Classic Bayesian Network:}
+\end{center}
+
+\begin{columns}
+\column{0.5\textwidth}
+\textbf{Nodes:}
+\begin{itemize}
+    \item Burglary
+    \item Earthquake
+    \item Alarm
+    \item JohnCalls
+    \item MaryCalls
+\end{itemize}
+
+\column{0.5\textwidth}
+\textbf{Edges:}
+\begin{itemize}
+    \item Burglary $\rightarrow$ Alarm
+    \item Earthquake $\rightarrow$ Alarm
+    \item Alarm $\rightarrow$ JohnCalls
+    \item Alarm $\rightarrow$ MaryCalls
+\end{itemize}
+\end{columns}
+
+\vspace{0.3cm}
+\textbf{Inference:} Given JohnCalls=True, MaryCalls=True\\
+Query: P(Burglary=True)?
+\end{frame}
+
+\section{Implementation}
+
+\begin{frame}
+\frametitle{Code Example: Network Construction}
+\begin{lstlisting}
+BayesianNetwork network;
+
+// Add nodes
+network.addNode("Disease", "Disease", 
+                {"None", "Cold", "Flu"});
+network.addNode("Symptom", "Fever", {"No", "Yes"});
+
+// Add edge
+network.addEdge("Disease", "Symptom");
+
+// Create CPT
+std::vector<size_t> dims = {3, 2};
+ConditionalProbabilityTable cpt(dims);
+cpt.setProbability({0}, 0, 0.9);  // P(No|None) = 0.9
+cpt.setProbability({0}, 1, 0.1);  // P(Yes|None) = 0.1
+cpt.normalize();
+network.setCPT("Symptom", cpt);
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+\frametitle{Code Example: Inference}
+\begin{lstlisting}
+// Set evidence
+std::map<std::string, std::string> evidence;
+evidence["Symptom"] = "Yes";
+
+// Perform inference
+std::vector<std::string> query = {"Disease"};
+auto results = network.variableElimination(query, evidence);
+
+// Display results
+for (const auto& pair : results) {
+    std::cout << "P(Disease=" << pair.first.at("Disease")
+              << ") = " << pair.second << std::endl;
+}
+\end{lstlisting}
+\end{frame}
+
+\section{Features}
+
+\begin{frame}
+\frametitle{Key Features}
+\begin{itemize}
+    \item \textbf{Lossless Representation}
+    \begin{itemize}
+        \item Exact probability storage
+        \item No approximation errors
+    \end{itemize}
+    
+    \item \textbf{Exact Inference}
+    \begin{itemize}
+        \item Variable elimination algorithm
+        \item Deterministic results
+    \end{itemize}
+    
+    \item \textbf{DAG Validation}
+    \begin{itemize}
+        \item Automatic cycle detection
+        \item Topological sorting
+    \end{itemize}
+    
+    \item \textbf{Flexible API}
+    \begin{itemize}
+        \item Easy network construction
+        \item Comprehensive error handling
+    \end{itemize}
+    
+    \item \textbf{File I/O}
+    \begin{itemize}
+        \item Network serialization
+        \item Persistent storage
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\section{Conclusion}
+
+\begin{frame}
+\frametitle{Summary}
+\begin{itemize}
+    \item Complete C++ implementation of lossless Bayesian networks
+    \item Exact inference using variable elimination
+    \item Efficient data structures for probability storage
+    \item Comprehensive documentation and examples
+\end{itemize}
+
+\vspace{0.5cm}
+\begin{block}{Applications}
+\begin{itemize}
+    \item Medical diagnosis systems
+    \item Risk assessment
+    \item Decision support systems
+    \item Any application requiring exact probabilistic reasoning
+\end{itemize}
+\end{block}
+
+\vspace{0.3cm}
+\begin{center}
+\textbf{Copyright (C) 2025, Shyamal Chandra}
+\end{center}
+\end{frame}
+
+\begin{frame}
+\frametitle{Questions?}
+\begin{center}
+\Large Thank you for your attention!
+
+\vspace{1cm}
+\small For more information, see the full documentation and reference manual.
+\end{center}
+\end{frame}
+
+\end{document}

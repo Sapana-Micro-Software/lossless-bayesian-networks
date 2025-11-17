@@ -1,0 +1,230 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{geometry}
+\geometry{margin=1in}
+
+\title{Lossless Bayesian Network Implementation}
+\author{Shyamal Chandra}
+\date{2025}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This document describes the implementation of a lossless Bayesian network in C++. The implementation provides exact inference capabilities using variable elimination, maintaining all probability information without approximation. The system supports directed acyclic graphs (DAGs) with conditional probability tables (CPTs) and provides a complete API for network construction, inference, and serialization.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+Bayesian networks are probabilistic graphical models that represent a set of variables and their conditional dependencies via a directed acyclic graph (DAG). This implementation provides a \emph{lossless} representation, meaning that all probability computations are performed exactly without approximation, preserving the full precision of the probability distributions.
+
+\subsection{Key Features}
+
+\begin{itemize}
+    \item \textbf{Lossless Representation}: All probabilities stored and computed exactly
+    \item \textbf{Exact Inference}: Variable elimination algorithm for precise inference
+    \item \textbf{DAG Validation}: Automatic cycle detection and topological sorting
+    \item \textbf{Flexible Structure}: Support for arbitrary DAG structures
+    \item \textbf{CPT Management}: Efficient storage and access of conditional probability tables
+    \item \textbf{File I/O}: Network serialization and loading capabilities
+\end{itemize}
+
+\section{Architecture}
+
+\subsection{Core Components}
+
+The implementation consists of three main components:
+
+\subsubsection{Node Class}
+
+The \texttt{Node} class represents a variable in the Bayesian network. Each node has:
+\begin{itemize}
+    \item A unique identifier and name
+    \item A set of possible states
+    \item Parent relationships (for DAG structure)
+    \item Fast state lookup via index mapping
+\end{itemize}
+
+\subsubsection{ConditionalProbabilityTable Class}
+
+The \texttt{ConditionalProbabilityTable} class stores conditional probabilities in a multi-dimensional array format. Key features:
+\begin{itemize}
+    \item Efficient multi-dimensional indexing using stride calculations
+    \item Automatic normalization of conditional distributions
+    \item Validation of probability distributions
+    \item Lossless storage of all probability values
+\end{itemize}
+
+\subsubsection{BayesianNetwork Class}
+
+The \texttt{BayesianNetwork} class is the main interface for working with Bayesian networks. It provides:
+\begin{itemize}
+    \item Network construction (adding nodes and edges)
+    \item DAG validation and topological sorting
+    \item Exact inference using variable elimination
+    \item Joint probability computation
+    \item File I/O operations
+\end{itemize}
+
+\section{Mathematical Foundation}
+
+\subsection{Bayesian Network Definition}
+
+A Bayesian network is a pair $(G, P)$ where:
+\begin{itemize}
+    \item $G = (V, E)$ is a directed acyclic graph with vertices $V$ (variables) and edges $E$ (dependencies)
+    \item $P$ is a set of conditional probability distributions, one for each variable given its parents
+\end{itemize}
+
+The joint probability distribution factorizes as:
+\[
+P(X_1, X_2, \ldots, X_n) = \prod_{i=1}^{n} P(X_i | \text{Pa}(X_i))
+\]
+where $\text{Pa}(X_i)$ denotes the parents of $X_i$ in the graph.
+
+\subsection{Inference}
+
+Given evidence $E = e$, we compute the posterior probability:
+\[
+P(Q | E = e) = \frac{P(Q, E = e)}{P(E = e)} = \frac{\sum_{\mathbf{H}} P(Q, E = e, \mathbf{H})}{\sum_{\mathbf{Q}, \mathbf{H}} P(Q, E = e, \mathbf{H})}
+\]
+where $Q$ is the query variable, and $\mathbf{H}$ are hidden variables.
+
+\subsection{Variable Elimination}
+
+Variable elimination is an exact inference algorithm that:
+\begin{enumerate}
+    \item Eliminates variables one at a time by summing them out
+    \item Maintains factors (functions over subsets of variables)
+    \item Computes the exact posterior distribution
+\end{enumerate}
+
+\section{Implementation Details}
+
+\subsection{Data Structures}
+
+\subsubsection{Multi-dimensional Array Indexing}
+
+The CPT uses a flat array with stride-based indexing. For dimensions $[d_0, d_1, \ldots, d_{n-1}]$, the stride for dimension $i$ is:
+\[
+\text{stride}_i = \prod_{j=i+1}^{n-1} d_j
+\]
+
+The flat index for multi-dimensional indices $[i_0, i_1, \ldots, i_{n-1}]$ is:
+\[
+\text{index} = \sum_{k=0}^{n-1} i_k \cdot \text{stride}_k
+\]
+
+\subsubsection{Topological Sorting}
+
+The network uses Kahn's algorithm for topological sorting:
+\begin{enumerate}
+    \item Compute in-degrees for all nodes
+    \item Initialize queue with nodes having in-degree 0
+    \item Repeatedly remove nodes from queue and update in-degrees
+    \item Detect cycles if queue becomes empty before all nodes are processed
+\end{enumerate}
+
+\subsection{Inference Algorithm}
+
+The variable elimination algorithm:
+\begin{enumerate}
+    \item Generate all possible assignments for query variables
+    \item For each query assignment, sum over all hidden variables
+    \item Normalize the resulting distribution
+\end{enumerate}
+
+\section{Usage Examples}
+
+\subsection{Basic Network Construction}
+
+\begin{lstlisting}[language=C++,basicstyle=\small]
+BayesianNetwork network;
+
+// Add nodes
+network.addNode("Disease", "Disease", {"None", "Cold", "Flu"});
+network.addNode("Symptom", "Fever", {"No", "Yes"});
+
+// Add edge
+network.addEdge("Disease", "Symptom");
+
+// Create and set CPT
+std::vector<size_t> dims = {3, 2};
+ConditionalProbabilityTable cpt(dims);
+cpt.setProbability({0}, 0, 0.9);  // P(Fever=No | Disease=None) = 0.9
+cpt.setProbability({0}, 1, 0.1);   // P(Fever=Yes | Disease=None) = 0.1
+// ... set other probabilities
+cpt.normalize();
+network.setCPT("Symptom", cpt);
+\end{lstlisting}
+
+\subsection{Performing Inference}
+
+\begin{lstlisting}[language=C++,basicstyle=\small]
+// Set evidence
+std::map<std::string, std::string> evidence;
+evidence["Symptom"] = "Yes";
+
+// Query
+std::vector<std::string> queryNodes = {"Disease"};
+auto results = network.variableElimination(queryNodes, evidence);
+
+// Display results
+for (const auto& pair : results) {
+    std::cout << "P(Disease=" << pair.first.at("Disease") 
+              << ") = " << pair.second << std::endl;
+}
+\end{lstlisting}
+
+\section{File Format}
+
+The network can be saved to and loaded from files. The format includes:
+\begin{itemize}
+    \item Node definitions (ID, name, states)
+    \item Edge definitions (parent -> child)
+    \item CPT data (dimensions and probabilities)
+\end{itemize}
+
+\section{Performance Considerations}
+
+\begin{itemize}
+    \item \textbf{Time Complexity}: Variable elimination is exponential in the number of variables in the worst case
+    \item \textbf{Space Complexity}: CPT storage is exponential in the number of parents
+    \item \textbf{Optimization}: Topological ordering minimizes computation during inference
+\end{itemize}
+
+\section{Error Handling}
+
+The implementation includes comprehensive error handling:
+\begin{itemize}
+    \item Cycle detection when adding edges
+    \item Validation of probability values (must be in [0, 1])
+    \item Normalization checks for CPTs
+    \item Missing node/state validation
+\end{itemize}
+
+\section{Conclusion}
+
+This implementation provides a complete, lossless Bayesian network system with exact inference capabilities. The design emphasizes correctness and precision, making it suitable for applications requiring exact probabilistic reasoning.
+
+\section{References}
+
+\begin{itemize}
+    \item Pearl, J. (1988). \textit{Probabilistic Reasoning in Intelligent Systems}. Morgan Kaufmann.
+    \item Koller, D., \& Friedman, N. (2009). \textit{Probabilistic Graphical Models}. MIT Press.
+    \item Russell, S., \& Norvig, P. (2020). \textit{Artificial Intelligence: A Modern Approach}. Pearson.
+\end{itemize}
+
+\end{document}
