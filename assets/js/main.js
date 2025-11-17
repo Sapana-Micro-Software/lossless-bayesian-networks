@@ -1,9 +1,98 @@
 "use strict";
 /**
- * Enhanced Main TypeScript file for Lossless Bayesian Networks site
+ * Ultra-Modern Main TypeScript file for Lossless Bayesian Networks site
  * Copyright (C) 2025, Shyamal Chandra
- * Jazzy and Snazzy UX with Awesome Interactions
+ * Academic Research Site with Stunning Visual Effects
  */
+// Canvas Background Animation
+class CanvasBackground {
+    constructor() {
+        this.canvas = null;
+        this.ctx = null;
+        this.animationId = null;
+        this.particles = [];
+        const canvasElement = document.getElementById('backgroundCanvas');
+        if (!canvasElement)
+            return;
+        this.canvas = canvasElement;
+        this.ctx = this.canvas.getContext('2d');
+        if (!this.ctx)
+            return;
+        this.init();
+    }
+    init() {
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+        this.createParticles();
+        this.animate();
+    }
+    resize() {
+        if (!this.canvas)
+            return;
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+    }
+    createParticles() {
+        if (!this.canvas)
+            return;
+        const particleCount = Math.floor((window.innerWidth * window.innerHeight) / 15000);
+        this.particles = [];
+        for (let i = 0; i < particleCount; i++) {
+            this.particles.push({
+                x: Math.random() * this.canvas.width,
+                y: Math.random() * this.canvas.height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5,
+                size: Math.random() * 2 + 1
+            });
+        }
+    }
+    animate() {
+        if (!this.ctx || !this.canvas)
+            return;
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.strokeStyle = 'rgba(37, 99, 235, 0.1)';
+        this.ctx.lineWidth = 0.5;
+        // Draw connections
+        for (let i = 0; i < this.particles.length; i++) {
+            for (let j = i + 1; j < this.particles.length; j++) {
+                const dx = this.particles[i].x - this.particles[j].x;
+                const dy = this.particles[i].y - this.particles[j].y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < 150) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.particles[i].x, this.particles[i].y);
+                    this.ctx.lineTo(this.particles[j].x, this.particles[j].y);
+                    this.ctx.stroke();
+                }
+            }
+        }
+        // Update and draw particles
+        if (!this.canvas || !this.ctx)
+            return;
+        const ctx = this.ctx;
+        const canvasWidth = this.canvas.width;
+        const canvasHeight = this.canvas.height;
+        ctx.fillStyle = 'rgba(37, 99, 235, 0.3)';
+        this.particles.forEach(particle => {
+            particle.x += particle.vx;
+            particle.y += particle.vy;
+            if (particle.x < 0 || particle.x > canvasWidth)
+                particle.vx *= -1;
+            if (particle.y < 0 || particle.y > canvasHeight)
+                particle.vy *= -1;
+            ctx.beginPath();
+            ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        this.animationId = requestAnimationFrame(() => this.animate());
+    }
+    destroy() {
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+        }
+    }
+}
 // Enhanced Navigation functionality
 class Navigation {
     constructor() {
@@ -509,6 +598,7 @@ style.textContent = `
 document.head.appendChild(style);
 // Initialize everything when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+    new CanvasBackground();
     new Navigation();
     new TabManager();
     new ClipboardManager();

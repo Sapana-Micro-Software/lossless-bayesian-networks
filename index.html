@@ -8,34 +8,48 @@ title: Lossless Bayesian Networks
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Exact probabilistic inference in C++ with lossless Bayesian networks. Complete implementation with exact inference capabilities.">
     <title>{{ page.title }} - {{ site.title }}</title>
     <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}">
     <link rel="stylesheet" href="{{ '/assets/css/animations.css' | relative_url }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Animated Background Canvas -->
+    <canvas id="backgroundCanvas" class="background-canvas"></canvas>
+    
     <!-- Scroll Progress Indicator -->
     <div class="scroll-progress" id="scrollProgress"></div>
     
-    <!-- Particles Container -->
+    <!-- Floating Particles -->
     <div class="particles" id="particles"></div>
     
     <!-- Navigation -->
     <nav class="navbar" id="navbar">
         <div class="nav-container">
             <div class="nav-brand">
-                <span class="brand-icon">🧠</span>
+                <div class="brand-logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2" fill="none"/>
+                        <path d="M16 8 L20 16 L16 24 L12 16 Z" fill="currentColor"/>
+                    </svg>
+                </div>
                 <span class="brand-text">Lossless Bayesian Networks</span>
             </div>
             <ul class="nav-menu" id="navMenu">
-                <li><a href="#home" class="nav-link active">Home</a></li>
+                <li><a href="#overview" class="nav-link active">Overview</a></li>
                 <li><a href="#features" class="nav-link">Features</a></li>
-                <li><a href="#docs" class="nav-link">Documentation</a></li>
+                <li><a href="#documentation" class="nav-link">Documentation</a></li>
                 <li><a href="#installation" class="nav-link">Installation</a></li>
                 <li><a href="#examples" class="nav-link">Examples</a></li>
-                <li><a href="https://github.com/Sapana-Micro-Software/lossless-bayesian-networks" class="nav-link" target="_blank">GitHub</a></li>
+                <li><a href="https://github.com/Sapana-Micro-Software/lossless-bayesian-networks" class="nav-link nav-github" target="_blank">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                    <span>GitHub</span>
+                </a></li>
             </ul>
             <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
                 <span></span>
@@ -46,48 +60,96 @@ title: Lossless Bayesian Networks
     </nav>
 
     <!-- Hero Section -->
-    <section id="home" class="hero">
+    <section id="overview" class="hero">
         <div class="hero-background">
             <div class="hero-gradient"></div>
-            <div class="hero-pattern"></div>
+            <div class="hero-mesh"></div>
         </div>
         <div class="hero-content">
-            <div class="hero-badge glow-pulse">
-                <span class="badge-icon">⚡</span>
-                <span>Exact Probabilistic Inference</span>
+            <div class="hero-badge">
+                <span class="badge-dot"></span>
+                <span>Research Project</span>
             </div>
             <h1 class="hero-title">
-                Lossless Bayesian Networks
-                <span class="title-highlight">in C++</span>
+                <span class="title-line">Lossless</span>
+                <span class="title-line highlight">Bayesian Networks</span>
+                <span class="title-line">in C++</span>
             </h1>
             <p class="hero-description">
-                A complete implementation of Bayesian networks with exact inference capabilities, 
+                A complete implementation of Bayesian networks with <strong>exact inference capabilities</strong>, 
                 maintaining all probability information without approximation. Includes Objective-C 
                 visualization for macOS with precise probability display.
             </p>
+            <div class="hero-meta">
+                <div class="meta-item">
+                    <span class="meta-label">Author</span>
+                    <span class="meta-value">Shyamal Chandra</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Year</span>
+                    <span class="meta-value">2025</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Language</span>
+                    <span class="meta-value">C++17</span>
+                </div>
+            </div>
             <div class="hero-actions">
-                <a href="#installation" class="btn btn-primary magnetic-btn">
+                <a href="#installation" class="btn btn-primary">
                     <span>Get Started</span>
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                         <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </a>
-                <a href="#docs" class="btn btn-secondary magnetic-btn">
-                    <span>View Docs</span>
+                <a href="#documentation" class="btn btn-secondary">
+                    <span>View Documentation</span>
                 </a>
             </div>
-            <div class="hero-stats">
-                <div class="stat-item">
-                    <div class="stat-value">100%</div>
-                    <div class="stat-label">Exact Precision</div>
+        </div>
+        <div class="hero-visual">
+            <div class="visual-card">
+                <div class="card-glow"></div>
+                <div class="card-content">
+                    <div class="network-preview">
+                        <div class="node node-1"></div>
+                        <div class="node node-2"></div>
+                        <div class="node node-3"></div>
+                        <div class="edge edge-1"></div>
+                        <div class="edge edge-2"></div>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-value">C++17</div>
-                    <div class="stat-label">Modern C++</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">macOS</div>
-                    <div class="stat-label">Visualization</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Abstract Section -->
+    <section id="abstract" class="abstract">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Abstract</h2>
+            </div>
+            <div class="abstract-content">
+                <p class="abstract-text">
+                    This project presents a complete implementation of Bayesian networks in C++ with 
+                    <strong>lossless probabilistic inference</strong>. Unlike approximate methods, our implementation 
+                    maintains exact probability distributions throughout all computations, ensuring precise 
+                    and deterministic results. The system includes comprehensive DAG validation, efficient 
+                    CPT management, and a macOS visualization application for interactive exploration of 
+                    probabilistic models.
+                </p>
+                <div class="abstract-highlights">
+                    <div class="highlight-item">
+                        <div class="highlight-icon">✓</div>
+                        <div class="highlight-text">Exact inference with variable elimination</div>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-icon">✓</div>
+                        <div class="highlight-text">Lossless probability representation</div>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-icon">✓</div>
+                        <div class="highlight-text">Interactive macOS visualization</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -98,55 +160,79 @@ title: Lossless Bayesian Networks
         <div class="container">
             <div class="section-header">
                 <h2 class="section-title">Key Features</h2>
-                <p class="section-subtitle">Everything you need for exact probabilistic reasoning</p>
+                <p class="section-subtitle">Comprehensive probabilistic reasoning capabilities</p>
             </div>
-            <div class="features-grid fade-in-up-stagger">
-                <div class="feature-card card-3d hover-lift" data-aos="fade-up">
-                    <div class="feature-icon">🎯</div>
+            <div class="features-grid">
+                <div class="feature-card" data-aos="fade-up">
+                    <div class="feature-header">
+                        <div class="feature-number">01</div>
+                        <div class="feature-icon">🎯</div>
+                    </div>
                     <h3 class="feature-title">Lossless Representation</h3>
                     <p class="feature-description">
                         All probabilities stored and computed exactly without approximation, 
-                        preserving full precision in all calculations.
+                        preserving full precision in all calculations. No rounding errors or 
+                        numerical approximations.
                     </p>
                 </div>
                 <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
-                    <div class="feature-icon">🔬</div>
+                    <div class="feature-header">
+                        <div class="feature-number">02</div>
+                        <div class="feature-icon">🔬</div>
+                    </div>
                     <h3 class="feature-title">Exact Inference</h3>
                     <p class="feature-description">
                         Variable elimination algorithm provides precise inference results 
-                        with deterministic, reproducible outcomes.
+                        with deterministic, reproducible outcomes. Guaranteed exactness in 
+                        all probabilistic queries.
                     </p>
                 </div>
                 <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
-                    <div class="feature-icon">🔍</div>
+                    <div class="feature-header">
+                        <div class="feature-number">03</div>
+                        <div class="feature-icon">🔍</div>
+                    </div>
                     <h3 class="feature-title">DAG Validation</h3>
                     <p class="feature-description">
                         Automatic cycle detection and topological sorting ensure 
-                        valid directed acyclic graph structures.
+                        valid directed acyclic graph structures. Comprehensive error 
+                        handling for invalid network configurations.
                     </p>
                 </div>
                 <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
-                    <div class="feature-icon">📊</div>
+                    <div class="feature-header">
+                        <div class="feature-number">04</div>
+                        <div class="feature-icon">📊</div>
+                    </div>
                     <h3 class="feature-title">Visualization</h3>
                     <p class="feature-description">
                         Interactive macOS app with exact precision display, 
-                        color-coded nodes, and real-time inference visualization.
+                        color-coded nodes, and real-time inference visualization. 
+                        Explore probabilistic models interactively.
                     </p>
                 </div>
                 <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
-                    <div class="feature-icon">⚙️</div>
+                    <div class="feature-header">
+                        <div class="feature-number">05</div>
+                        <div class="feature-icon">⚙️</div>
+                    </div>
                     <h3 class="feature-title">Flexible API</h3>
                     <p class="feature-description">
                         Easy network construction with comprehensive error handling 
-                        and support for arbitrary DAG structures.
+                        and support for arbitrary DAG structures. Intuitive interface 
+                        for building complex probabilistic models.
                     </p>
                 </div>
                 <div class="feature-card" data-aos="fade-up" data-aos-delay="500">
-                    <div class="feature-icon">💾</div>
+                    <div class="feature-header">
+                        <div class="feature-number">06</div>
+                        <div class="feature-icon">💾</div>
+                    </div>
                     <h3 class="feature-title">File I/O</h3>
                     <p class="feature-description">
                         Network serialization and loading capabilities for 
-                        persistent storage and sharing.
+                        persistent storage and sharing. Save and load complete 
+                        network configurations with all probability tables.
                     </p>
                 </div>
             </div>
@@ -154,19 +240,22 @@ title: Lossless Bayesian Networks
     </section>
 
     <!-- Documentation Section -->
-    <section id="docs" class="docs">
+    <section id="documentation" class="documentation">
         <div class="container">
             <div class="section-header">
                 <h2 class="section-title">Documentation</h2>
                 <p class="section-subtitle">Complete guides and references</p>
             </div>
-            <div class="docs-grid fade-in-up-stagger">
-                <div class="doc-card gradient-border hover-lift">
-                    <div class="doc-icon">📖</div>
+            <div class="docs-grid">
+                <div class="doc-card">
+                    <div class="doc-header">
+                        <div class="doc-icon">📖</div>
+                        <div class="doc-badge">Main</div>
+                    </div>
                     <h3 class="doc-title">Main Documentation</h3>
                     <p class="doc-description">
                         Comprehensive guide covering architecture, algorithms, mathematical foundations, 
-                        and usage examples.
+                        and usage examples. Complete technical reference.
                     </p>
                     <a href="/lossless-bayesian-networks/docs/lossless_bayesian_networks.pdf" class="doc-link" target="_blank">
                         <span>View PDF</span>
@@ -176,11 +265,14 @@ title: Lossless Bayesian Networks
                     </a>
                 </div>
                 <div class="doc-card">
-                    <div class="doc-icon">📊</div>
+                    <div class="doc-header">
+                        <div class="doc-icon">📊</div>
+                        <div class="doc-badge">Slides</div>
+                    </div>
                     <h3 class="doc-title">Beamer Presentation</h3>
                     <p class="doc-description">
                         Professional presentation slides covering key concepts, 
-                        architecture, and examples.
+                        architecture, and examples. Ready for academic presentations.
                     </p>
                     <a href="/lossless-bayesian-networks/docs/presentation.pdf" class="doc-link" target="_blank">
                         <span>View PDF</span>
@@ -190,11 +282,14 @@ title: Lossless Bayesian Networks
                     </a>
                 </div>
                 <div class="doc-card">
-                    <div class="doc-icon">📚</div>
+                    <div class="doc-header">
+                        <div class="doc-icon">📚</div>
+                        <div class="doc-badge">API</div>
+                    </div>
                     <h3 class="doc-title">Reference Manual</h3>
                     <p class="doc-description">
                         Complete API documentation with detailed descriptions of all 
-                        classes, methods, and parameters.
+                        classes, methods, and parameters. Developer reference guide.
                     </p>
                     <a href="/lossless-bayesian-networks/docs/reference_manual.pdf" class="doc-link" target="_blank">
                         <span>View PDF</span>
@@ -223,8 +318,14 @@ title: Lossless Bayesian Networks
                     <h3>Building the C++ Library</h3>
                     <div class="code-block">
                         <div class="code-header">
-                            <span>Terminal</span>
-                            <button class="copy-btn" data-copy="cpp-code">Copy</button>
+                            <span class="code-lang">Bash</span>
+                            <button class="copy-btn" data-copy="cpp-code">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M5.5 3.5h5v5h-5v-5z" stroke="currentColor" stroke-width="1.5"/>
+                                    <path d="M10.5 8.5h5v5h-5v-5z" stroke="currentColor" stroke-width="1.5"/>
+                                </svg>
+                                <span>Copy</span>
+                            </button>
                         </div>
                         <pre id="cpp-code"><code># Clone the repository
 git clone https://github.com/Sapana-Micro-Software/lossless-bayesian-networks.git
@@ -236,18 +337,26 @@ make
 # Run examples
 make run</code></pre>
                     </div>
-                    <h4>Requirements</h4>
-                    <ul class="requirements-list">
-                        <li>C++17 compatible compiler (g++, clang++)</li>
-                        <li>Make</li>
-                    </ul>
+                    <div class="requirements">
+                        <h4>Requirements</h4>
+                        <ul class="requirements-list">
+                            <li>C++17 compatible compiler (g++, clang++)</li>
+                            <li>Make</li>
+                        </ul>
+                    </div>
                 </div>
                 <div class="tab-content" id="macos-tab">
                     <h3>Building the macOS Visualization App</h3>
                     <div class="code-block">
                         <div class="code-header">
-                            <span>Terminal</span>
-                            <button class="copy-btn" data-copy="macos-code">Copy</button>
+                            <span class="code-lang">Bash</span>
+                            <button class="copy-btn" data-copy="macos-code">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M5.5 3.5h5v5h-5v-5z" stroke="currentColor" stroke-width="1.5"/>
+                                    <path d="M10.5 8.5h5v5h-5v-5z" stroke="currentColor" stroke-width="1.5"/>
+                                </svg>
+                                <span>Copy</span>
+                            </button>
                         </div>
                         <pre id="macos-code"><code># Build the macOS app
 make -f Makefile.macos
@@ -255,12 +364,14 @@ make -f Makefile.macos
 # Run the app
 make -f Makefile.macos run</code></pre>
                     </div>
-                    <h4>Requirements</h4>
-                    <ul class="requirements-list">
-                        <li>macOS 10.13 or later</li>
-                        <li>Xcode Command Line Tools</li>
-                        <li>clang++ with Objective-C++ support</li>
-                    </ul>
+                    <div class="requirements">
+                        <h4>Requirements</h4>
+                        <ul class="requirements-list">
+                            <li>macOS 10.13 or later</li>
+                            <li>Xcode Command Line Tools</li>
+                            <li>clang++ with Objective-C++ support</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -275,8 +386,14 @@ make -f Makefile.macos run</code></pre>
             </div>
             <div class="examples-grid">
                 <div class="example-card">
-                    <h3>Medical Diagnosis</h3>
-                    <p>Disease diagnosis based on symptoms with exact probability calculations.</p>
+                    <div class="example-header">
+                        <h3>Medical Diagnosis</h3>
+                        <div class="example-tag">Healthcare</div>
+                    </div>
+                    <p class="example-description">
+                        Disease diagnosis based on symptoms with exact probability calculations. 
+                        Demonstrates practical application in medical decision support.
+                    </p>
                     <div class="code-snippet">
                         <pre><code>network.addNode("Disease", "Disease", 
                 {"None", "Cold", "Flu"});
@@ -285,8 +402,14 @@ network.addEdge("Disease", "Symptom");</code></pre>
                     </div>
                 </div>
                 <div class="example-card">
-                    <h3>Alarm Network</h3>
-                    <p>Classic Bayesian network example with burglary, earthquake, and alarm.</p>
+                    <div class="example-header">
+                        <h3>Alarm Network</h3>
+                        <div class="example-tag">Classic</div>
+                    </div>
+                    <p class="example-description">
+                        Classic Bayesian network example with burglary, earthquake, and alarm. 
+                        Standard benchmark for probabilistic inference systems.
+                    </p>
                     <div class="code-snippet">
                         <pre><code>network.addNode("Burglary", "Burglary", 
                 {"False", "True"});
@@ -302,22 +425,39 @@ network.addEdge("Burglary", "Alarm");</code></pre>
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
-                <div class="footer-section">
-                    <h4>Lossless Bayesian Networks</h4>
-                    <p>Exact probabilistic inference in C++</p>
+                <div class="footer-main">
+                    <div class="footer-brand">
+                        <div class="brand-logo">
+                            <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
+                                <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2" fill="none"/>
+                                <path d="M16 8 L20 16 L16 24 L12 16 Z" fill="currentColor"/>
+                            </svg>
+                        </div>
+                        <h4>Lossless Bayesian Networks</h4>
+                        <p>Exact probabilistic inference in C++</p>
+                    </div>
                 </div>
-                <div class="footer-section">
-                    <h4>Resources</h4>
-                    <ul>
-                        <li><a href="#docs">Documentation</a></li>
-                        <li><a href="#installation">Installation</a></li>
-                        <li><a href="https://github.com/Sapana-Micro-Software/lossless-bayesian-networks">GitHub</a></li>
-                    </ul>
+                <div class="footer-links">
+                    <div class="footer-section">
+                        <h5>Resources</h5>
+                        <ul>
+                            <li><a href="#documentation">Documentation</a></li>
+                            <li><a href="#installation">Installation</a></li>
+                            <li><a href="#examples">Examples</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-section">
+                        <h5>Project</h5>
+                        <ul>
+                            <li><a href="https://github.com/Sapana-Micro-Software/lossless-bayesian-networks" target="_blank">GitHub Repository</a></li>
+                            <li><a href="#features">Features</a></li>
+                            <li><a href="#overview">Overview</a></li>
+                        </ul>
+                    </div>
                 </div>
-                <div class="footer-section">
-                    <h4>Copyright</h4>
-                    <p>Copyright (C) 2025, Shyamal Chandra</p>
-                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>Copyright (C) 2025, Shyamal Chandra</p>
             </div>
         </div>
     </footer>
