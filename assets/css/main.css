@@ -591,6 +591,11 @@ body {
     gap: 2rem;
 }
 
+/* Ensure 7th feature card gets proper styling */
+.feature-card:nth-child(7) {
+    grid-column: span 1;
+}
+
 .feature-card {
     background: white;
     padding: 2.5rem;

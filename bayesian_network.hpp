@@ -467,6 +467,479 @@ public:
         (void)filename;  // Suppress unused parameter warning
         throw std::runtime_error("File loading not fully implemented");
     }
+
+    /**
+     * Structure to represent a message in belief propagation
+     */
+    struct Message {
+        std::string fromNode;
+        std::string toNode;
+        std::map<std::string, double> probabilities;  // State -> probability
+    };
+
+    /**
+     * Structure to represent influence trace
+     */
+    struct InfluenceTrace {
+        std::string sourceNode;
+        std::string targetNode;
+        std::string path;  // Path taken (e.g., "A->B->C")
+        double influenceStrength;  // How much influence flows
+        std::map<std::string, double> stateInfluences;  // Per-state influence
+    };
+
+    /**
+     * Lossless Belief Propagation with influence tracing
+     * Implements sum-product algorithm for exact inference while tracing
+     * how probabilities flow through the network.
+     * 
+     * @param queryNodes Nodes to query (variables of interest)
+     * @param evidence Map of observed node IDs to their states
+     * @param traceInfluence If true, trace influence paths
+     * @return Pair of (beliefs, influence traces)
+     */
+    std::pair<std::map<std::string, std::map<std::string, double>>, 
+              std::vector<InfluenceTrace>>
+    beliefPropagation(const std::vector<std::string>& queryNodes,
+                     const std::map<std::string, std::string>& evidence,
+                     bool traceInfluence = true) const {
+        
+        // Beliefs: node -> state -> probability
+        std::map<std::string, std::map<std::string, double>> beliefs;
+        std::vector<InfluenceTrace> influenceTraces;
+        
+        // Initialize beliefs with prior probabilities
+        for (const auto& pair : nodes) {
+            const std::string& nodeId = pair.first;
+            const Node& node = pair.second;
+            
+            // If node is in evidence, set belief to 1.0 for observed state
+            if (evidence.find(nodeId) != evidence.end()) {
+                std::string observedState = evidence.at(nodeId);
+                for (const std::string& state : node.states) {
+                    beliefs[nodeId][state] = (state == observedState) ? 1.0 : 0.0;
+                }
+            } else {
+                // Initialize with uniform prior (will be updated by messages)
+                double uniformProb = 1.0 / static_cast<double>(node.states.size());
+                for (const std::string& state : node.states) {
+                    beliefs[nodeId][state] = uniformProb;
+                }
+            }
+        }
+        
+        // Build message passing structure
+        // Messages: (from, to) -> message probabilities
+        std::map<std::pair<std::string, std::string>, 
+                 std::map<std::string, double>> messages;
+        
+        // Initialize messages from CPTs
+        initializeMessages(messages, evidence);
+        
+        // Upward pass: messages from leaves to root
+        upwardPass(messages, evidence);
+        
+        // Downward pass: messages from root to leaves
+        downwardPass(messages, evidence);
+        
+        // Compute beliefs from messages
+        computeBeliefs(messages, beliefs, evidence);
+        
+        // Trace influence if requested
+        if (traceInfluence) {
+            traceInfluencePaths(messages, beliefs, queryNodes, evidence, influenceTraces);
+        }
+        
+        return std::make_pair(beliefs, influenceTraces);
+    }
+
+private:
+    /**
+     * Initialize messages from CPTs
+     */
+    void initializeMessages(std::map<std::pair<std::string, std::string>, 
+                                    std::map<std::string, double>>& messages,
+                           const std::map<std::string, std::string>& evidence) const {
+        for (const auto& pair : nodes) {
+            const std::string& nodeId = pair.first;
+            const Node& node = pair.second;
+            
+            // Skip if node is observed
+            if (evidence.find(nodeId) != evidence.end()) {
+                continue;
+            }
+            
+            // If node has no parents, initialize from prior
+            if (node.parentIds.empty()) {
+                if (cpts.find(nodeId) != cpts.end()) {
+                    const ConditionalProbabilityTable& cpt = cpts.at(nodeId);
+                    for (size_t i = 0; i < node.states.size(); ++i) {
+                        double prob = cpt.getProbability({}, i);
+                        // Send message to all children
+                        for (const auto& childPair : nodes) {
+                            if (childPair.second.hasParent(nodeId)) {
+                                std::pair<std::string, std::string> key(nodeId, childPair.first);
+                                messages[key][node.states[i]] = prob;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Upward pass: propagate messages from leaves to root
+     */
+    void upwardPass(std::map<std::pair<std::string, std::string>, 
+                            std::map<std::string, double>>& messages,
+                   const std::map<std::string, std::string>& evidence) const {
+        // Process nodes in reverse topological order (leaves first)
+        std::vector<std::string> reverseOrder = nodeOrder;
+        std::reverse(reverseOrder.begin(), reverseOrder.end());
+        
+        for (const std::string& nodeId : reverseOrder) {
+            if (evidence.find(nodeId) != evidence.end()) {
+                continue;  // Skip observed nodes
+            }
+            
+            const Node& node = nodes.at(nodeId);
+            if (cpts.find(nodeId) == cpts.end()) {
+                continue;  // Skip nodes without CPT
+            }
+            
+            // Collect messages from children
+            std::map<std::string, std::map<std::string, double>> childMessages;
+            for (const auto& childPair : nodes) {
+                if (childPair.second.hasParent(nodeId)) {
+                    std::pair<std::string, std::string> key(nodeId, childPair.first);
+                    if (messages.find(key) != messages.end()) {
+                        childMessages[childPair.first] = messages[key];
+                    }
+                }
+            }
+            
+            // Send message to each parent
+            for (const std::string& parentId : node.parentIds) {
+                if (evidence.find(parentId) != evidence.end()) {
+                    continue;  // Skip observed parents
+                }
+                
+                std::map<std::string, double> messageToParent;
+                const Node& parentNode = nodes.at(parentId);
+                
+                // For each parent state
+                for (const std::string& parentState : parentNode.states) {
+                    double messageValue = 0.0;
+                    
+                    // Sum over all node states
+                    for (size_t nodeStateIdx = 0; nodeStateIdx < node.states.size(); ++nodeStateIdx) {
+                        const std::string& nodeState = node.states[nodeStateIdx];
+                        
+                        // Get conditional probability
+                        std::map<std::string, std::string> parentStates;
+                        parentStates[parentId] = parentState;
+                        // Add other parents if any
+                        for (const std::string& otherParentId : node.parentIds) {
+                            if (otherParentId != parentId) {
+                                if (evidence.find(otherParentId) != evidence.end()) {
+                                    parentStates[otherParentId] = evidence.at(otherParentId);
+                                } else {
+                                    // Use most likely state (simplified)
+                                    parentStates[otherParentId] = parentNode.states[0];
+                                }
+                            }
+                        }
+                        
+                        double condProb = getConditionalProbability(nodeId, nodeState, parentStates);
+                        
+                        // Multiply by messages from children
+                        double childProduct = 1.0;
+                        for (const auto& childMsgPair : childMessages) {
+                            if (childMsgPair.second.find(nodeState) != childMsgPair.second.end()) {
+                                childProduct *= childMsgPair.second.at(nodeState);
+                            }
+                        }
+                        
+                        messageValue += condProb * childProduct;
+                    }
+                    
+                    messageToParent[parentState] = messageValue;
+                }
+                
+                // Normalize message
+                double sum = 0.0;
+                for (const auto& msgPair : messageToParent) {
+                    sum += msgPair.second;
+                }
+                if (sum > 1e-10) {
+                    for (auto& msgPair : messageToParent) {
+                        msgPair.second /= sum;
+                    }
+                }
+                
+                std::pair<std::string, std::string> key(nodeId, parentId);
+                messages[key] = messageToParent;
+            }
+        }
+    }
+
+    /**
+     * Downward pass: propagate messages from root to leaves
+     */
+    void downwardPass(std::map<std::pair<std::string, std::string>, 
+                              std::map<std::string, double>>& messages,
+                     const std::map<std::string, std::string>& evidence) const {
+        // Process nodes in topological order (root first)
+        for (const std::string& nodeId : nodeOrder) {
+            if (evidence.find(nodeId) != evidence.end()) {
+                continue;  // Skip observed nodes
+            }
+            
+            const Node& node = nodes.at(nodeId);
+            if (cpts.find(nodeId) == cpts.end()) {
+                continue;
+            }
+            
+            // Collect messages from parents
+            std::map<std::string, std::map<std::string, double>> parentMessages;
+            for (const std::string& parentId : node.parentIds) {
+                std::pair<std::string, std::string> key(parentId, nodeId);
+                if (messages.find(key) != messages.end()) {
+                    parentMessages[parentId] = messages[key];
+                }
+            }
+            
+            // Send message to each child
+            for (const auto& childPair : nodes) {
+                if (childPair.second.hasParent(nodeId)) {
+                    const std::string& childId = childPair.first;
+                    if (evidence.find(childId) != evidence.end()) {
+                        continue;  // Skip observed children
+                    }
+                    
+                    std::map<std::string, double> messageToChild;
+                    const Node& childNode = nodes.at(childId);
+                    
+                    // For each child state
+                    for (const std::string& childState : childNode.states) {
+                        double messageValue = 0.0;
+                        
+                        // Sum over all node states
+                        for (size_t nodeStateIdx = 0; nodeStateIdx < node.states.size(); ++nodeStateIdx) {
+                            const std::string& nodeState = node.states[nodeStateIdx];
+                            
+                            // Build parent states for conditional probability
+                            std::map<std::string, std::string> parentStates;
+                            for (const std::string& parentId : node.parentIds) {
+                                if (evidence.find(parentId) != evidence.end()) {
+                                    parentStates[parentId] = evidence.at(parentId);
+                                } else if (parentMessages.find(parentId) != parentMessages.end()) {
+                                    // Use most likely parent state from message
+                                    double maxProb = 0.0;
+                                    std::string maxState = nodes.at(parentId).states[0];
+                                    for (const auto& msgPair : parentMessages.at(parentId)) {
+                                        if (msgPair.second > maxProb) {
+                                            maxProb = msgPair.second;
+                                            maxState = msgPair.first;
+                                        }
+                                    }
+                                    parentStates[parentId] = maxState;
+                                } else {
+                                    parentStates[parentId] = nodes.at(parentId).states[0];
+                                }
+                            }
+                            
+                            double condProb = getConditionalProbability(nodeId, nodeState, parentStates);
+                            
+                            // Multiply by parent messages
+                            double parentProduct = 1.0;
+                            for (const auto& parentMsgPair : parentMessages) {
+                                if (parentMsgPair.second.find(parentStates[parentMsgPair.first]) != 
+                                    parentMsgPair.second.end()) {
+                                    parentProduct *= parentMsgPair.second.at(parentStates[parentMsgPair.first]);
+                                }
+                            }
+                            
+                            messageValue += condProb * parentProduct;
+                        }
+                        
+                        messageToChild[childState] = messageValue;
+                    }
+                    
+                    // Normalize message
+                    double sum = 0.0;
+                    for (const auto& msgPair : messageToChild) {
+                        sum += msgPair.second;
+                    }
+                    if (sum > 1e-10) {
+                        for (auto& msgPair : messageToChild) {
+                            msgPair.second /= sum;
+                        }
+                    }
+                    
+                    std::pair<std::string, std::string> key(nodeId, childId);
+                    messages[key] = messageToChild;
+                }
+            }
+        }
+    }
+
+    /**
+     * Compute beliefs from messages
+     */
+    void computeBeliefs(const std::map<std::pair<std::string, std::string>, 
+                                     std::map<std::string, double>>& messages,
+                      std::map<std::string, std::map<std::string, double>>& beliefs,
+                      const std::map<std::string, std::string>& evidence) const {
+        for (const auto& pair : nodes) {
+            const std::string& nodeId = pair.first;
+            const Node& node = pair.second;
+            
+            // Skip observed nodes
+            if (evidence.find(nodeId) != evidence.end()) {
+                continue;
+            }
+            
+            // Initialize belief from prior if available
+            if (cpts.find(nodeId) != cpts.end() && node.parentIds.empty()) {
+                const ConditionalProbabilityTable& cpt = cpts.at(nodeId);
+                for (size_t i = 0; i < node.states.size(); ++i) {
+                    beliefs[nodeId][node.states[i]] = cpt.getProbability({}, i);
+                }
+            }
+            
+            // Multiply by messages from parents
+            for (const std::string& parentId : node.parentIds) {
+                std::pair<std::string, std::string> key(parentId, nodeId);
+                if (messages.find(key) != messages.end()) {
+                    for (const std::string& state : node.states) {
+                        if (messages.at(key).find(state) != messages.at(key).end()) {
+                            beliefs[nodeId][state] *= messages.at(key).at(state);
+                        }
+                    }
+                }
+            }
+            
+            // Multiply by messages from children
+            for (const auto& childPair : nodes) {
+                if (childPair.second.hasParent(nodeId)) {
+                    std::pair<std::string, std::string> key(nodeId, childPair.first);
+                    if (messages.find(key) != messages.end()) {
+                        for (const std::string& state : node.states) {
+                            if (messages.at(key).find(state) != messages.at(key).end()) {
+                                beliefs[nodeId][state] *= messages.at(key).at(state);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Normalize beliefs
+            double sum = 0.0;
+            for (const auto& beliefPair : beliefs[nodeId]) {
+                sum += beliefPair.second;
+            }
+            if (sum > 1e-10) {
+                for (auto& beliefPair : beliefs[nodeId]) {
+                    beliefPair.second /= sum;
+                }
+            }
+        }
+    }
+
+    /**
+     * Trace influence paths through the network
+     */
+    void traceInfluencePaths(const std::map<std::pair<std::string, std::string>, 
+                                           std::map<std::string, double>>& /*messages*/,
+                            const std::map<std::string, std::map<std::string, double>>& beliefs,
+                            const std::vector<std::string>& queryNodes,
+                            const std::map<std::string, std::string>& evidence,
+                            std::vector<InfluenceTrace>& traces) const {
+        traces.clear();
+        
+        // For each evidence node, trace influence to query nodes
+        for (const auto& evidencePair : evidence) {
+            const std::string& evidenceNode = evidencePair.first;
+            
+            for (const std::string& queryNode : queryNodes) {
+                if (evidenceNode == queryNode) {
+                    continue;  // Skip self-influence
+                }
+                
+                // Find paths from evidence to query
+                std::vector<std::vector<std::string>> paths;
+                findPaths(evidenceNode, queryNode, std::vector<std::string>(), paths);
+                
+                // For each path, compute influence
+                for (const auto& path : paths) {
+                    InfluenceTrace trace;
+                    trace.sourceNode = evidenceNode;
+                    trace.targetNode = queryNode;
+                    
+                    // Build path string
+                    std::ostringstream pathStream;
+                    pathStream << evidenceNode;
+                    for (size_t i = 1; i < path.size(); ++i) {
+                        pathStream << "->" << path[i];
+                    }
+                    trace.path = pathStream.str();
+                    
+                    // Compute influence strength
+                    double totalInfluence = 0.0;
+                    if (beliefs.find(queryNode) != beliefs.end()) {
+                        for (const auto& beliefPair : beliefs.at(queryNode)) {
+                            totalInfluence += beliefPair.second;
+                        }
+                        totalInfluence /= static_cast<double>(beliefs.at(queryNode).size());
+                    }
+                    trace.influenceStrength = totalInfluence;
+                    
+                    // Compute per-state influence
+                    if (beliefs.find(queryNode) != beliefs.end()) {
+                        for (const auto& beliefPair : beliefs.at(queryNode)) {
+                            trace.stateInfluences[beliefPair.first] = beliefPair.second;
+                        }
+                    }
+                    
+                    traces.push_back(trace);
+                }
+            }
+        }
+    }
+
+    /**
+     * Find all paths from source to target
+     */
+    void findPaths(const std::string& source,
+                  const std::string& target,
+                  std::vector<std::string> currentPath,
+                  std::vector<std::vector<std::string>>& allPaths) const {
+        currentPath.push_back(source);
+        
+        if (source == target) {
+            allPaths.push_back(currentPath);
+            return;
+        }
+        
+        // Find children of source
+        for (const auto& pair : nodes) {
+            if (pair.second.hasParent(source)) {
+                // Check if already in path (avoid cycles)
+                bool inPath = false;
+                for (const std::string& nodeInPath : currentPath) {
+                    if (nodeInPath == pair.first) {
+                        inPath = true;
+                        break;
+                    }
+                }
+                if (!inPath) {
+                    findPaths(pair.first, target, currentPath, allPaths);
+                }
+            }
+        }
+    }
 };
 
 #endif // BAYESIAN_NETWORK_HPP

@@ -150,6 +150,10 @@ title: Lossless Bayesian Networks
                         <div class="highlight-icon">✓</div>
                         <div class="highlight-text">Interactive macOS visualization</div>
                     </div>
+                    <div class="highlight-item">
+                        <div class="highlight-icon">✓</div>
+                        <div class="highlight-text">Lossless belief propagation with influence tracing</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -233,6 +237,18 @@ title: Lossless Bayesian Networks
                         Network serialization and loading capabilities for 
                         persistent storage and sharing. Save and load complete 
                         network configurations with all probability tables.
+                    </p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="600">
+                    <div class="feature-header">
+                        <div class="feature-number">07</div>
+                        <div class="feature-icon">🌊</div>
+                    </div>
+                    <h3 class="feature-title">Lossless Belief Propagation</h3>
+                    <p class="feature-description">
+                        Sum-product message passing algorithm for exact inference 
+                        with influence tracing. Trace how probabilities flow through 
+                        the network and identify causal pathways.
                     </p>
                 </div>
             </div>
@@ -415,6 +431,22 @@ network.addEdge("Disease", "Symptom");</code></pre>
                 {"False", "True"});
 network.addNode("Alarm", "Alarm", {"False", "True"});
 network.addEdge("Burglary", "Alarm");</code></pre>
+                    </div>
+                </div>
+                <div class="example-card">
+                    <div class="example-header">
+                        <h3>Belief Propagation</h3>
+                        <div class="example-tag">New</div>
+                    </div>
+                    <p class="example-description">
+                        Trace influence through the network using lossless belief propagation. 
+                        See how evidence propagates and affects probabilities throughout the network.
+                    </p>
+                    <div class="code-snippet">
+                        <pre><code>auto result = network.beliefPropagation(
+    queryNodes, evidence, true);
+auto& beliefs = result.first;
+auto& traces = result.second;</code></pre>
                     </div>
                 </div>
             </div>

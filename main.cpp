@@ -248,6 +248,94 @@ void exampleAlarmNetwork() {
 }
 
 /**
+ * Example: Belief Propagation with Influence Tracing
+ */
+void exampleBeliefPropagation() {
+    std::cout << "=== Belief Propagation with Influence Tracing ===\n\n";
+
+    BayesianNetwork network;
+
+    // Create a simple network: A -> B -> C
+    network.addNode("A", "Cause", {"False", "True"});
+    network.addNode("B", "Intermediate", {"Low", "High"});
+    network.addNode("C", "Effect", {"Negative", "Positive"});
+
+    network.addEdge("A", "B");
+    network.addEdge("B", "C");
+
+    // Prior for A
+    std::vector<size_t> aDims = {2};
+    ConditionalProbabilityTable aCPT(aDims);
+    aCPT.setProbability({}, 0, 0.7);  // P(A=False) = 0.7
+    aCPT.setProbability({}, 1, 0.3);  // P(A=True) = 0.3
+    network.setCPT("A", aCPT);
+
+    // CPT for B given A
+    std::vector<size_t> bDims = {2, 2};
+    ConditionalProbabilityTable bCPT(bDims);
+    // P(B=Low | A=False) = 0.8, P(B=High | A=False) = 0.2
+    bCPT.setProbability({0}, 0, 0.8);
+    bCPT.setProbability({0}, 1, 0.2);
+    // P(B=Low | A=True) = 0.3, P(B=High | A=True) = 0.7
+    bCPT.setProbability({1}, 0, 0.3);
+    bCPT.setProbability({1}, 1, 0.7);
+    bCPT.normalize();
+    network.setCPT("B", bCPT);
+
+    // CPT for C given B
+    std::vector<size_t> cDims = {2, 2};
+    ConditionalProbabilityTable cCPT(cDims);
+    // P(C=Negative | B=Low) = 0.9, P(C=Positive | B=Low) = 0.1
+    cCPT.setProbability({0}, 0, 0.9);
+    cCPT.setProbability({0}, 1, 0.1);
+    // P(C=Negative | B=High) = 0.2, P(C=Positive | B=High) = 0.8
+    cCPT.setProbability({1}, 0, 0.2);
+    cCPT.setProbability({1}, 1, 0.8);
+    cCPT.normalize();
+    network.setCPT("C", cCPT);
+
+    // Perform belief propagation with influence tracing
+    std::cout << "Evidence: C=Positive\n";
+    std::cout << "Query: What is P(A) and how does C influence A?\n\n";
+
+    std::map<std::string, std::string> evidence;
+    evidence["C"] = "Positive";
+
+    std::vector<std::string> queryNodes = {"A", "B"};
+
+    auto result = network.beliefPropagation(queryNodes, evidence, true);
+    auto& beliefs = result.first;
+    auto& influenceTraces = result.second;
+
+    // Display beliefs
+    std::cout << "Beliefs (Posterior Probabilities):\n";
+    std::cout << std::fixed << std::setprecision(4);
+    for (const auto& nodeBelief : beliefs) {
+        std::cout << "  " << nodeBelief.first << ":\n";
+        for (const auto& stateProb : nodeBelief.second) {
+            std::cout << "    P(" << nodeBelief.first << "=" << stateProb.first 
+                      << ") = " << stateProb.second << "\n";
+        }
+    }
+
+    // Display influence traces
+    std::cout << "\nInfluence Traces:\n";
+    for (const auto& trace : influenceTraces) {
+        std::cout << "  Source: " << trace.sourceNode 
+                  << " -> Target: " << trace.targetNode << "\n";
+        std::cout << "  Path: " << trace.path << "\n";
+        std::cout << "  Influence Strength: " << std::fixed << std::setprecision(4) 
+                  << trace.influenceStrength << "\n";
+        std::cout << "  Per-State Influences:\n";
+        for (const auto& stateInfl : trace.stateInfluences) {
+            std::cout << "    " << stateInfl.first << ": " << stateInfl.second << "\n";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "\n";
+}
+
+/**
  * Main function
  */
 int main() {
@@ -259,6 +347,8 @@ int main() {
         exampleMedicalDiagnosis();
         // Run alarm network example
         exampleAlarmNetwork();
+        // Run belief propagation example
+        exampleBeliefPropagation();
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
