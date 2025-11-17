@@ -34,6 +34,7 @@ jobs:
 
       - name: Compile TypeScript
         run: npm run build
+        continue-on-error: false
 
       - name: Setup Jekyll
         uses: ruby/setup-ruby@v1
