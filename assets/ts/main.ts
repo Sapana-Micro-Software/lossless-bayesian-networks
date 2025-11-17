@@ -26,10 +26,11 @@ class Navigation {
         // Mobile menu toggle
         if (this.navToggle && this.navMenu) {
             const navMenu = this.navMenu;
+            const navToggle = this.navToggle;
             this.navToggle.addEventListener('click', () => {
                 navMenu.classList.toggle('active');
                 // Animate hamburger icon
-                const spans = this.navToggle.querySelectorAll('span');
+                const spans = navToggle.querySelectorAll('span');
                 if (navMenu.classList.contains('active')) {
                     spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
                     spans[1].style.opacity = '0';
