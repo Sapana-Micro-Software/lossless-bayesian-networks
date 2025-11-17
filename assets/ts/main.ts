@@ -393,7 +393,189 @@ class CursorEffects {
     }
 }
 
-// Add CSS for ripple animation
+// Particle System for Background
+class ParticleSystem {
+    private container: HTMLElement | null;
+    private particles: Particle[] = [];
+    private particleCount: number = 50;
+    private animationId: number | null = null;
+
+    constructor() {
+        this.container = document.getElementById('particles');
+        this.init();
+    }
+
+    private init(): void {
+        if (!this.container) return;
+
+        // Create particles
+        for (let i = 0; i < this.particleCount; i++) {
+            const particle = new Particle(this.container);
+            this.particles.push(particle);
+        }
+
+        // Start animation
+        this.animate();
+    }
+
+    private animate(): void {
+        this.particles.forEach(particle => {
+            particle.update();
+        });
+
+        this.animationId = requestAnimationFrame(() => this.animate());
+    }
+
+    public destroy(): void {
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+        }
+        this.particles.forEach(particle => particle.destroy());
+    }
+}
+
+class Particle {
+    private element: HTMLElement;
+    private x: number;
+    private y: number;
+    private vx: number;
+    private vy: number;
+    private size: number;
+    private container: HTMLElement;
+
+    constructor(container: HTMLElement) {
+        this.container = container;
+        this.element = document.createElement('div');
+        this.element.className = 'particle';
+        
+        // Random starting position
+        this.x = Math.random() * window.innerWidth;
+        this.y = Math.random() * window.innerHeight;
+        
+        // Random velocity
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 0.5) * 0.5;
+        
+        // Random size
+        this.size = Math.random() * 3 + 1;
+        
+        // Apply styles
+        this.element.style.width = `${this.size}px`;
+        this.element.style.height = `${this.size}px`;
+        this.element.style.left = `${this.x}px`;
+        this.element.style.top = `${this.y}px`;
+        
+        // Random color from gradient
+        const colors = ['rgba(99, 102, 241, 0.4)', 'rgba(139, 92, 246, 0.4)', 'rgba(236, 72, 153, 0.4)'];
+        this.element.style.background = colors[Math.floor(Math.random() * colors.length)];
+        
+        container.appendChild(this.element);
+    }
+
+    public update(): void {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // Wrap around edges
+        if (this.x < 0) this.x = window.innerWidth;
+        if (this.x > window.innerWidth) this.x = 0;
+        if (this.y < 0) this.y = window.innerHeight;
+        if (this.y > window.innerHeight) this.y = 0;
+
+        this.element.style.left = `${this.x}px`;
+        this.element.style.top = `${this.y}px`;
+    }
+
+    public destroy(): void {
+        this.element.remove();
+    }
+}
+
+// Enhanced Scroll Progress Indicator
+class ScrollProgress {
+    private progressBar: HTMLElement | null;
+
+    constructor() {
+        this.progressBar = document.getElementById('scrollProgress');
+        this.init();
+    }
+
+    private init(): void {
+        if (!this.progressBar) return;
+
+        window.addEventListener('scroll', () => {
+            const windowHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (window.scrollY / windowHeight) * 100;
+            this.progressBar!.style.width = `${scrolled}%`;
+        });
+    }
+}
+
+// Magnetic Button Effect
+class MagneticButtons {
+    private buttons: NodeListOf<HTMLElement>;
+
+    constructor() {
+        this.buttons = document.querySelectorAll('.magnetic-btn');
+        this.init();
+    }
+
+    private init(): void {
+        this.buttons.forEach(button => {
+            button.addEventListener('mousemove', (e) => {
+                const rect = button.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+
+                const moveX = x * 0.3;
+                const moveY = y * 0.3;
+
+                button.style.transform = `translate(${moveX}px, ${moveY}px) scale(1.05)`;
+            });
+
+            button.addEventListener('mouseleave', () => {
+                button.style.transform = 'translate(0, 0) scale(1)';
+            });
+        });
+    }
+}
+
+// Stagger Animation Manager
+class StaggerAnimation {
+    private observer: IntersectionObserver;
+
+    constructor() {
+        this.observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry, index) => {
+                    if (entry.isIntersecting) {
+                        setTimeout(() => {
+                            entry.target.classList.add('animate');
+                        }, index * 100);
+                        this.observer.unobserve(entry.target);
+                    }
+                });
+            },
+            {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            }
+        );
+        this.init();
+    }
+
+    private init(): void {
+        const staggerContainers = document.querySelectorAll('.fade-in-up-stagger');
+        staggerContainers.forEach(container => {
+            const children = container.children;
+            Array.from(children).forEach(child => {
+                this.observer.observe(child);
+            });
+        });
+    }
+}
+
+// Add CSS for ripple animation and particles
 const style = document.createElement('style');
 style.textContent = `
     @keyframes ripple {
@@ -401,6 +583,22 @@ style.textContent = `
             transform: translate(-50%, -50%) scale(4);
             opacity: 0;
         }
+    }
+    
+    @keyframes floatParticle {
+        0%, 100% {
+            transform: translateY(0) translateX(0);
+        }
+        50% {
+            transform: translateY(-20px) translateX(10px);
+        }
+    }
+    
+    .particle {
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
+        transition: transform 0.1s ease-out;
     }
 `;
 document.head.appendChild(style);
@@ -413,6 +611,10 @@ document.addEventListener('DOMContentLoaded', () => {
     new AnimationObserver();
     new ParallaxEffect();
     new CursorEffects();
+    new ParticleSystem();
+    new ScrollProgress();
+    new MagneticButtons();
+    new StaggerAnimation();
     
     // Add smooth page load animation
     document.body.style.opacity = '0';
@@ -420,6 +622,76 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.transition = 'opacity 0.5s ease';
         document.body.style.opacity = '1';
     }, 100);
+    
+    // Add entrance animations to hero elements
+    const heroElements = document.querySelectorAll('.hero-badge, .hero-title, .hero-description, .hero-actions, .hero-stats');
+    heroElements.forEach((el, index) => {
+        (el as HTMLElement).style.opacity = '0';
+        (el as HTMLElement).style.transform = 'translateY(30px)';
+        setTimeout(() => {
+            (el as HTMLElement).style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+            (el as HTMLElement).style.opacity = '1';
+            (el as HTMLElement).style.transform = 'translateY(0)';
+        }, index * 150 + 200);
+    });
+    
+    // Add scroll-triggered reveal animations
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('reveal-on-scroll');
+                revealObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1 });
+    
+    document.querySelectorAll('section, .feature-card, .doc-card, .example-card').forEach(el => {
+        revealObserver.observe(el);
+    });
+    
+    // Add interactive hover effects to cards
+    document.querySelectorAll('.feature-card, .doc-card, .example-card').forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            card.classList.add('interactive');
+        });
+    });
+    
+    // Add smooth scroll to all anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', (e: Event) => {
+            const href = (anchor as HTMLAnchorElement).getAttribute('href');
+            if (href && href !== '#') {
+                e.preventDefault();
+                const target = document.querySelector(href);
+                if (target) {
+                    const offset = 80;
+                    const targetPosition = (target as HTMLElement).offsetTop - offset;
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            }
+        });
+    });
+    
+    // Add parallax effect to hero background on scroll
+    let lastScroll = 0;
+    window.addEventListener('scroll', () => {
+        const currentScroll = window.pageYOffset;
+        const hero = document.querySelector('.hero-background');
+        if (hero) {
+            const rate = currentScroll * 0.3;
+            (hero as HTMLElement).style.transform = `translateY(${rate}px)`;
+        }
+        lastScroll = currentScroll;
+    });
+    
+    // Add loading class for smooth page load
+    document.body.classList.add('loading');
+    setTimeout(() => {
+        document.body.classList.remove('loading');
+    }, 600);
 });
 
 // Smooth scroll polyfill for older browsers

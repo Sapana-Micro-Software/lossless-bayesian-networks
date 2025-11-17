@@ -10,11 +10,18 @@ title: Lossless Bayesian Networks
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ page.title }} - {{ site.title }}</title>
     <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}">
+    <link rel="stylesheet" href="{{ '/assets/css/animations.css' | relative_url }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Scroll Progress Indicator -->
+    <div class="scroll-progress" id="scrollProgress"></div>
+    
+    <!-- Particles Container -->
+    <div class="particles" id="particles"></div>
+    
     <!-- Navigation -->
     <nav class="navbar" id="navbar">
         <div class="nav-container">
@@ -45,7 +52,7 @@ title: Lossless Bayesian Networks
             <div class="hero-pattern"></div>
         </div>
         <div class="hero-content">
-            <div class="hero-badge">
+            <div class="hero-badge glow-pulse">
                 <span class="badge-icon">⚡</span>
                 <span>Exact Probabilistic Inference</span>
             </div>
@@ -59,13 +66,13 @@ title: Lossless Bayesian Networks
                 visualization for macOS with precise probability display.
             </p>
             <div class="hero-actions">
-                <a href="#installation" class="btn btn-primary">
+                <a href="#installation" class="btn btn-primary magnetic-btn">
                     <span>Get Started</span>
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                         <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </a>
-                <a href="#docs" class="btn btn-secondary">
+                <a href="#docs" class="btn btn-secondary magnetic-btn">
                     <span>View Docs</span>
                 </a>
             </div>
@@ -93,8 +100,8 @@ title: Lossless Bayesian Networks
                 <h2 class="section-title">Key Features</h2>
                 <p class="section-subtitle">Everything you need for exact probabilistic reasoning</p>
             </div>
-            <div class="features-grid">
-                <div class="feature-card" data-aos="fade-up">
+            <div class="features-grid fade-in-up-stagger">
+                <div class="feature-card card-3d hover-lift" data-aos="fade-up">
                     <div class="feature-icon">🎯</div>
                     <h3 class="feature-title">Lossless Representation</h3>
                     <p class="feature-description">
@@ -153,8 +160,8 @@ title: Lossless Bayesian Networks
                 <h2 class="section-title">Documentation</h2>
                 <p class="section-subtitle">Complete guides and references</p>
             </div>
-            <div class="docs-grid">
-                <div class="doc-card">
+            <div class="docs-grid fade-in-up-stagger">
+                <div class="doc-card gradient-border hover-lift">
                     <div class="doc-icon">📖</div>
                     <h3 class="doc-title">Main Documentation</h3>
                     <p class="doc-description">

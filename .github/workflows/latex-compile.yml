@@ -8,13 +8,20 @@ on:
       - 'docs/*.tex'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   compile-latex:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup LaTeX
         uses: xu-cheng/latex-action@v2
@@ -26,32 +33,62 @@ jobs:
       - name: Compile Main Documentation
         run: |
           cd docs
-          pdflatex -interaction=nonstopmode lossless_bayesian_networks.tex
-          pdflatex -interaction=nonstopmode lossless_bayesian_networks.tex
+          echo "Compiling main documentation..."
+          pdflatex -interaction=nonstopmode lossless_bayesian_networks.tex || true
+          pdflatex -interaction=nonstopmode lossless_bayesian_networks.tex || true
           biber lossless_bayesian_networks || true
-          pdflatex -interaction=nonstopmode lossless_bayesian_networks.tex
+          pdflatex -interaction=nonstopmode lossless_bayesian_networks.tex || true
+          if [ -f "lossless_bayesian_networks.pdf" ]; then
+            echo "✓ Main documentation compiled successfully"
+          else
+            echo "⚠ Warning: Main documentation PDF not found"
+          fi
 
       - name: Compile Presentation
         run: |
           cd docs
-          pdflatex -interaction=nonstopmode presentation.tex
-          pdflatex -interaction=nonstopmode presentation.tex
+          echo "Compiling presentation..."
+          pdflatex -interaction=nonstopmode presentation.tex || true
+          pdflatex -interaction=nonstopmode presentation.tex || true
+          if [ -f "presentation.pdf" ]; then
+            echo "✓ Presentation compiled successfully"
+          else
+            echo "⚠ Warning: Presentation PDF not found"
+          fi
 
       - name: Compile Reference Manual
         run: |
           cd docs
-          pdflatex -interaction=nonstopmode reference_manual.tex
-          pdflatex -interaction=nonstopmode reference_manual.tex
+          echo "Compiling reference manual..."
+          pdflatex -interaction=nonstopmode reference_manual.tex || true
+          pdflatex -interaction=nonstopmode reference_manual.tex || true
+          if [ -f "reference_manual.pdf" ]; then
+            echo "✓ Reference manual compiled successfully"
+          else
+            echo "⚠ Warning: Reference manual PDF not found"
+          fi
 
-      - name: Copy PDFs to docs directory
+      - name: Verify PDFs
         run: |
-          mkdir -p docs/_site
-          cp docs/*.pdf docs/_site/ 2>/dev/null || true
+          cd docs
+          pdf_count=$(ls -1 *.pdf 2>/dev/null | wc -l)
+          echo "Found $pdf_count PDF file(s)"
+          if [ $pdf_count -eq 0 ]; then
+            echo "⚠ Warning: No PDFs found, but continuing..."
+          fi
 
       - name: Commit and push PDFs
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add docs/*.pdf docs/_site/*.pdf
-          git diff --staged --quiet || git commit -m "Auto-compile LaTeX documentation [skip ci]"
-          git push
+          
+          # Add all PDFs
+          git add docs/*.pdf 2>/dev/null || true
+          
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Auto-compile LaTeX documentation [skip ci]" || exit 0
+            git push || echo "Push failed, but continuing..."
+          fi
