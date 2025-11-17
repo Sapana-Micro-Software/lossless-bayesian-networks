@@ -1,0 +1,57 @@
+name: Compile LaTeX Documentation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/*.tex'
+  workflow_dispatch:
+
+jobs:
+  compile-latex:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup LaTeX
+        uses: xu-cheng/latex-action@v2
+        with:
+          root_file: docs/lossless_bayesian_networks.tex
+          latexmk_use_xelatex: false
+          args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode
+
+      - name: Compile Main Documentation
+        run: |
+          cd docs
+          pdflatex -interaction=nonstopmode lossless_bayesian_networks.tex
+          pdflatex -interaction=nonstopmode lossless_bayesian_networks.tex
+          biber lossless_bayesian_networks || true
+          pdflatex -interaction=nonstopmode lossless_bayesian_networks.tex
+
+      - name: Compile Presentation
+        run: |
+          cd docs
+          pdflatex -interaction=nonstopmode presentation.tex
+          pdflatex -interaction=nonstopmode presentation.tex
+
+      - name: Compile Reference Manual
+        run: |
+          cd docs
+          pdflatex -interaction=nonstopmode reference_manual.tex
+          pdflatex -interaction=nonstopmode reference_manual.tex
+
+      - name: Copy PDFs to docs directory
+        run: |
+          mkdir -p docs/_site
+          cp docs/*.pdf docs/_site/ 2>/dev/null || true
+
+      - name: Commit and push PDFs
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add docs/*.pdf docs/_site/*.pdf
+          git diff --staged --quiet || git commit -m "Auto-compile LaTeX documentation [skip ci]"
+          git push

@@ -1,0 +1,22 @@
+{
+  "name": "lossless-bayesian-networks-site",
+  "version": "1.0.0",
+  "description": "GitHub Pages site for Lossless Bayesian Networks",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "serve": "bundle exec jekyll serve",
+    "build:site": "bundle exec jekyll build"
+  },
+  "keywords": [
+    "bayesian-networks",
+    "probabilistic-inference",
+    "c++",
+    "documentation"
+  ],
+  "author": "Shyamal Chandra",
+  "license": "Copyright (C) 2025, Shyamal Chandra",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,0 +1,53 @@
+# Jekyll Configuration for Lossless Bayesian Networks
+# Copyright (C) 2025, Shyamal Chandra
+
+title: Lossless Bayesian Networks
+description: Exact probabilistic inference in C++ with Objective-C visualization
+author: Shyamal Chandra
+copyright: "Copyright (C) 2025, Shyamal Chandra"
+
+# Site settings
+url: "https://sapana-micro-software.github.io"
+baseurl: "/lossless-bayesian-networks"
+permalink: /:categories/:title/
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+theme: minima
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+
+# Exclude from processing
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - .git
+  - .gitignore
+  - README.md
+  - Makefile
+  - Makefile.macos
+  - "*.o"
+  - "*.app"
+  - bayesian_network
+
+# Collections
+collections:
+  docs:
+    output: true
+    permalink: /:collection/:name
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+      type: "docs"
+    values:
+      layout: "default"
+
+# Sass settings
+sass:
+  style: compressed

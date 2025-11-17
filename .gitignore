@@ -7,6 +7,19 @@ bayesian_network
 BayesianNetworkVisualizer.app
 *.app
 
+# Node.js
+node_modules/
+package-lock.json
+
+# Jekyll
+_site/
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
+
+# TypeScript
+*.tsbuildinfo
+
 # Compiled LaTeX files
 *.aux
 *.log
