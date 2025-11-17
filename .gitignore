@@ -1,0 +1,28 @@
+# Build artifacts
+*.o
+*.a
+*.so
+*.dylib
+bayesian_network
+
+# Compiled LaTeX files
+*.aux
+*.log
+*.out
+*.toc
+*.nav
+*.snm
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+
+# PDF files (if you want to exclude compiled docs)
+# *.pdf
+
+# Editor files
+.DS_Store
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
