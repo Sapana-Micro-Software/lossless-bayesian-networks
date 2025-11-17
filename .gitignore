@@ -4,6 +4,8 @@
 *.so
 *.dylib
 bayesian_network
+BayesianNetworkVisualizer.app
+*.app
 
 # Compiled LaTeX files
 *.aux

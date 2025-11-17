@@ -1,0 +1,98 @@
+# Makefile for macOS app with Objective-C wrapper
+# Copyright (C) 2025, Shyamal Chandra
+
+APP_NAME = BayesianNetworkVisualizer
+BUNDLE_ID = com.sapana.bayesiannetwork
+APP_DIR = $(APP_NAME).app
+CONTENTS_DIR = $(APP_DIR)/Contents
+MACOS_DIR = $(CONTENTS_DIR)/MacOS
+RESOURCES_DIR = $(CONTENTS_DIR)/Resources
+
+# Compiler settings
+CXX = clang++
+OBJCXX = clang++
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -fobjc-arc
+OBJCFLAGS = -fobjc-arc -framework Cocoa -framework Foundation
+LDFLAGS = -framework Cocoa -framework Foundation
+
+# Source files
+CPP_SOURCES = main.cpp
+OBJC_SOURCES = BayesianNetworkWrapper.mm \
+               NetworkGraphView.m \
+               ViewController.m \
+               AppDelegate.m \
+               main.m
+HEADERS = BayesianNetworkWrapper.h \
+          NetworkGraphView.h \
+          ViewController.h \
+          AppDelegate.h \
+          bayesian_network.hpp \
+          node.hpp \
+          cpt.hpp
+
+# Object files
+CPP_OBJECTS = $(CPP_SOURCES:.cpp=.o)
+OBJC_OBJECTS = $(OBJC_SOURCES:.mm=.o) $(OBJC_SOURCES:.m=.o)
+
+# Default target
+all: $(APP_DIR)
+
+# Create app bundle structure
+$(APP_DIR): $(OBJC_OBJECTS) $(CPP_OBJECTS)
+	@echo "Creating app bundle..."
+	@mkdir -p $(MACOS_DIR)
+	@mkdir -p $(RESOURCES_DIR)
+	@$(OBJCXX) $(OBJCFLAGS) $(LDFLAGS) -o $(MACOS_DIR)/$(APP_NAME) $(OBJC_OBJECTS) $(CPP_OBJECTS)
+	@echo "APPL????" > $(CONTENTS_DIR)/PkgInfo
+	@echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" > $(CONTENTS_DIR)/Info.plist
+	@echo "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">" >> $(CONTENTS_DIR)/Info.plist
+	@echo "<plist version=\"1.0\">" >> $(CONTENTS_DIR)/Info.plist
+	@echo "<dict>" >> $(CONTENTS_DIR)/Info.plist
+	@echo "  <key>CFBundleDevelopmentRegion</key>" >> $(CONTENTS_DIR)/Info.plist
+	@echo "  <string>en</string>" >> $(CONTENTS_DIR)/Info.plist
+	@echo "  <key>CFBundleExecutable</key>" >> $(CONTENTS_DIR)/Info.plist
+	@echo "  <string>$(APP_NAME)</string>" >> $(CONTENTS_DIR)/Info.plist
+	@echo "  <key>CFBundleIdentifier</key>" >> $(CONTENTS_DIR)/Info.plist
+	@echo "  <string>$(BUNDLE_ID)</string>" >> $(CONTENTS_DIR)/Info.plist
+	@echo "  <key>CFBundleInfoDictionaryVersion</key>" >> $(CONTENTS_DIR)/Info.plist
+	@echo "  <string>6.0</string>" >> $(CONTENTS_DIR)/Info.plist
+	@echo "  <key>CFBundleName</key>" >> $(CONTENTS_DIR)/Info.plist
+	@echo "  <string>$(APP_NAME)</string>" >> $(CONTENTS_DIR)/Info.plist
+	@echo "  <key>CFBundlePackageType</key>" >> $(CONTENTS_DIR)/Info.plist
+	@echo "  <string>APPL</string>" >> $(CONTENTS_DIR)/Info.plist
+	@echo "  <key>CFBundleShortVersionString</key>" >> $(CONTENTS_DIR)/Info.plist
+	@echo "  <string>1.0</string>" >> $(CONTENTS_DIR)/Info.plist
+	@echo "  <key>CFBundleVersion</key>" >> $(CONTENTS_DIR)/Info.plist
+	@echo "  <string>1</string>" >> $(CONTENTS_DIR)/Info.plist
+	@echo "  <key>LSMinimumSystemVersion</key>" >> $(CONTENTS_DIR)/Info.plist
+	@echo "  <string>10.13</string>" >> $(CONTENTS_DIR)/Info.plist
+	@echo "  <key>NSPrincipalClass</key>" >> $(CONTENTS_DIR)/Info.plist
+	@echo "  <string>NSApplication</string>" >> $(CONTENTS_DIR)/Info.plist
+	@echo "</dict>" >> $(CONTENTS_DIR)/Info.plist
+	@echo "</plist>" >> $(CONTENTS_DIR)/Info.plist
+	@echo "App bundle created: $(APP_DIR)"
+
+# Compile Objective-C++ files
+%.o: %.mm
+	$(OBJCXX) $(CXXFLAGS) $(OBJCFLAGS) -c $< -o $@
+
+# Compile Objective-C files
+%.o: %.m
+	$(OBJCXX) $(OBJCFLAGS) -c $< -o $@
+
+# Compile C++ files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Clean build artifacts
+clean:
+	rm -rf $(APP_DIR)
+	rm -f $(OBJC_OBJECTS) $(CPP_OBJECTS)
+	rm -f *.o
+
+# Run the app
+run: $(APP_DIR)
+	open $(APP_DIR)
+
+# Phony targets
+.PHONY: all clean run
