@@ -336,6 +336,103 @@ void exampleBeliefPropagation() {
 }
 
 /**
+ * Example: Reverse Belief Propagation with Lossless Tracing
+ */
+void exampleReverseBeliefPropagation() {
+    std::cout << "=== Reverse Belief Propagation with Lossless Tracing ===\n\n";
+
+    BayesianNetwork network;
+
+    // Create a diagnostic network: Disease -> Symptom1, Symptom2
+    network.addNode("Disease", "Disease", {"None", "Cold", "Flu"});
+    network.addNode("Symptom1", "Fever", {"No", "Yes"});
+    network.addNode("Symptom2", "Cough", {"No", "Yes"});
+
+    network.addEdge("Disease", "Symptom1");
+    network.addEdge("Disease", "Symptom2");
+
+    // Prior for Disease
+    std::vector<size_t> diseaseDims = {3};
+    ConditionalProbabilityTable diseaseCPT(diseaseDims);
+    diseaseCPT.setProbability({}, 0, 0.7);  // P(Disease=None) = 0.7
+    diseaseCPT.setProbability({}, 1, 0.2);   // P(Disease=Cold) = 0.2
+    diseaseCPT.setProbability({}, 2, 0.1);   // P(Disease=Flu) = 0.1
+    network.setCPT("Disease", diseaseCPT);
+
+    // CPT for Symptom1 given Disease
+    std::vector<size_t> symptom1Dims = {3, 2};
+    ConditionalProbabilityTable symptom1CPT(symptom1Dims);
+    // P(Fever=No | Disease=None) = 0.9, P(Fever=Yes | Disease=None) = 0.1
+    symptom1CPT.setProbability({0}, 0, 0.9);
+    symptom1CPT.setProbability({0}, 1, 0.1);
+    // P(Fever=No | Disease=Cold) = 0.7, P(Fever=Yes | Disease=Cold) = 0.3
+    symptom1CPT.setProbability({1}, 0, 0.7);
+    symptom1CPT.setProbability({1}, 1, 0.3);
+    // P(Fever=No | Disease=Flu) = 0.2, P(Fever=Yes | Disease=Flu) = 0.8
+    symptom1CPT.setProbability({2}, 0, 0.2);
+    symptom1CPT.setProbability({2}, 1, 0.8);
+    symptom1CPT.normalize();
+    network.setCPT("Symptom1", symptom1CPT);
+
+    // CPT for Symptom2 given Disease
+    std::vector<size_t> symptom2Dims = {3, 2};
+    ConditionalProbabilityTable symptom2CPT(symptom2Dims);
+    // P(Cough=No | Disease=None) = 0.95, P(Cough=Yes | Disease=None) = 0.05
+    symptom2CPT.setProbability({0}, 0, 0.95);
+    symptom2CPT.setProbability({0}, 1, 0.05);
+    // P(Cough=No | Disease=Cold) = 0.3, P(Cough=Yes | Disease=Cold) = 0.7
+    symptom2CPT.setProbability({1}, 0, 0.3);
+    symptom2CPT.setProbability({1}, 1, 0.7);
+    // P(Cough=No | Disease=Flu) = 0.4, P(Cough=Yes | Disease=Flu) = 0.6
+    symptom2CPT.setProbability({2}, 0, 0.4);
+    symptom2CPT.setProbability({2}, 1, 0.6);
+    symptom2CPT.normalize();
+    network.setCPT("Symptom2", symptom2CPT);
+
+    // Perform reverse belief propagation
+    // Given observed effects (symptoms), infer causes (disease)
+    std::cout << "Evidence (Observed Effects): Symptom1=Yes, Symptom2=Yes\n";
+    std::cout << "Query (Causes): What is P(Disease) and how do symptoms influence disease?\n\n";
+
+    std::map<std::string, std::string> evidence;
+    evidence["Symptom1"] = "Yes";  // Observed effect
+    evidence["Symptom2"] = "Yes";  // Observed effect
+
+    std::vector<std::string> queryNodes = {"Disease"};  // Query cause
+
+    auto result = network.reverseBeliefPropagation(queryNodes, evidence, true);
+    auto& beliefs = result.first;
+    auto& reverseInfluenceTraces = result.second;
+
+    // Display beliefs
+    std::cout << "Reverse Beliefs (Diagnostic Probabilities):\n";
+    std::cout << std::fixed << std::setprecision(4);
+    for (const auto& nodeBelief : beliefs) {
+        std::cout << "  " << nodeBelief.first << ":\n";
+        for (const auto& stateProb : nodeBelief.second) {
+            std::cout << "    P(" << nodeBelief.first << "=" << stateProb.first 
+                      << ") = " << stateProb.second << "\n";
+        }
+    }
+
+    // Display reverse influence traces
+    std::cout << "\nReverse Influence Traces (Effect -> Cause):\n";
+    for (const auto& trace : reverseInfluenceTraces) {
+        std::cout << "  Source (Effect): " << trace.sourceNode 
+                  << " -> Target (Cause): " << trace.targetNode << "\n";
+        std::cout << "  Reverse Path: " << trace.path << "\n";
+        std::cout << "  Influence Strength: " << std::fixed << std::setprecision(4) 
+                  << trace.influenceStrength << "\n";
+        std::cout << "  Per-State Influences:\n";
+        for (const auto& stateInfl : trace.stateInfluences) {
+            std::cout << "    " << stateInfl.first << ": " << stateInfl.second << "\n";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "\n";
+}
+
+/**
  * Main function
  */
 int main() {
@@ -349,6 +446,8 @@ int main() {
         exampleAlarmNetwork();
         // Run belief propagation example
         exampleBeliefPropagation();
+        // Run reverse belief propagation example
+        exampleReverseBeliefPropagation();
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
