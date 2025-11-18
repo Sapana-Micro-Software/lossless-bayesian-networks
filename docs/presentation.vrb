@@ -1,0 +1,16 @@
+\frametitle{Code Example: Inference}
+\begin{lstlisting}
+// Set evidence
+std::map<std::string, std::string> evidence;
+evidence["Symptom"] = "Yes";
+
+// Perform inference
+std::vector<std::string> query = {"Disease"};
+auto results = network.variableElimination(query, evidence);
+
+// Display results
+for (const auto& pair : results) {
+    std::cout << "P(Disease=" << pair.first.at("Disease")
+              << ") = " << pair.second << std::endl;
+}
+\end{lstlisting}

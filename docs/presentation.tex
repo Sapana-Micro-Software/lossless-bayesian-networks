@@ -110,7 +110,7 @@ Unlike approximate methods (MCMC, variational inference), lossless methods provi
 \end{columns}
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
 \frametitle{Node Structure}
 \begin{lstlisting}
 class Node {
@@ -130,7 +130,7 @@ class Node {
 \end{itemize}
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
 \frametitle{Conditional Probability Table}
 \begin{lstlisting}
 class ConditionalProbabilityTable {
@@ -256,7 +256,7 @@ Query: P(Burglary=True)?
 
 \section{Implementation}
 
-\begin{frame}
+\begin{frame}[fragile]
 \frametitle{Code Example: Network Construction}
 \begin{lstlisting}
 BayesianNetwork network;
@@ -279,7 +279,7 @@ network.setCPT("Symptom", cpt);
 \end{lstlisting}
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
 \frametitle{Code Example: Inference}
 \begin{lstlisting}
 // Set evidence
