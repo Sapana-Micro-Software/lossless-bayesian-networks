@@ -79,9 +79,29 @@ jobs:
       - name: Copy PDFs to site
         run: |
           mkdir -p _site/docs
-          cp docs/*.pdf _site/docs/ 2>/dev/null || echo "No PDFs found in docs/"
+          # Copy PDFs from docs directory
+          if [ -f "docs/lossless_bayesian_networks.pdf" ]; then
+            cp docs/lossless_bayesian_networks.pdf _site/docs/
+            echo "✓ Copied lossless_bayesian_networks.pdf"
+          fi
+          if [ -f "docs/presentation.pdf" ]; then
+            cp docs/presentation.pdf _site/docs/
+            echo "✓ Copied presentation.pdf"
+          fi
+          if [ -f "docs/reference_manual.pdf" ]; then
+            cp docs/reference_manual.pdf _site/docs/
+            echo "✓ Copied reference_manual.pdf"
+          fi
+          if [ -f "docs/supplementary_material.pdf" ]; then
+            cp docs/supplementary_material.pdf _site/docs/
+            echo "✓ Copied supplementary_material.pdf"
+          fi
+          # Also copy from _site if they exist there
+          if [ -d "docs/_site" ]; then
+            cp docs/_site/*.pdf _site/docs/ 2>/dev/null || true
+          fi
           echo "✓ PDFs copied to _site/docs/"
-          ls -lh _site/docs/*.pdf 2>/dev/null || echo "No PDFs in _site/docs/"
+          ls -lh _site/docs/*.pdf 2>/dev/null || echo "⚠️  No PDFs found in _site/docs/"
 
       - name: Ensure .nojekyll exists
         run: |

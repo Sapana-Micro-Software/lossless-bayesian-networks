@@ -4,12 +4,13 @@
  * Academic Research Site with Stunning Visual Effects
  */
 
-// Canvas Background Animation
+// Lightweight Canvas Background Animation
 class CanvasBackground {
     protected canvas: HTMLCanvasElement | null = null;
     protected ctx: CanvasRenderingContext2D | null = null;
     protected animationId: number | null = null;
     protected particles: Array<{x: number, y: number, vx: number, vy: number, size: number}> = [];
+    private frameCount: number = 0;
 
     constructor() {
         const canvasElement = document.getElementById('backgroundCanvas') as HTMLCanvasElement;
@@ -33,20 +34,22 @@ class CanvasBackground {
         if (!this.canvas) return;
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
+        this.createParticles(); // Recreate particles on resize
     }
 
     protected createParticles(): void {
         if (!this.canvas) return;
-        const particleCount = Math.floor((window.innerWidth * window.innerHeight) / 15000);
+        // Reduced particle count for better performance
+        const particleCount = Math.min(20, Math.floor((window.innerWidth * window.innerHeight) / 50000));
         this.particles = [];
         
         for (let i = 0; i < particleCount; i++) {
             this.particles.push({
                 x: Math.random() * this.canvas.width,
                 y: Math.random() * this.canvas.height,
-                vx: (Math.random() - 0.5) * 0.5,
-                vy: (Math.random() - 0.5) * 0.5,
-                size: Math.random() * 2 + 1
+                vx: (Math.random() - 0.5) * 0.3,
+                vy: (Math.random() - 0.5) * 0.3,
+                size: Math.random() * 1.5 + 0.5
             });
         }
     }
@@ -54,39 +57,28 @@ class CanvasBackground {
     protected animate(): void {
         if (!this.ctx || !this.canvas) return;
         
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.frameCount++;
         
-        this.ctx.strokeStyle = 'rgba(37, 99, 235, 0.1)';
-        this.ctx.lineWidth = 0.5;
-        
-        // Draw connections
-        for (let i = 0; i < this.particles.length; i++) {
-            for (let j = i + 1; j < this.particles.length; j++) {
-                const dx = this.particles[i].x - this.particles[j].x;
-                const dy = this.particles[i].y - this.particles[j].y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance < 150) {
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(this.particles[i].x, this.particles[i].y);
-                    this.ctx.lineTo(this.particles[j].x, this.particles[j].y);
-                    this.ctx.stroke();
-                }
-            }
+        // Only clear and redraw every 2 frames for better performance
+        if (this.frameCount % 2 === 0) {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         }
         
-        // Update and draw particles
-        if (!this.canvas || !this.ctx) return;
+        // Simplified drawing - no connections, just particles
         const ctx = this.ctx;
         const canvasWidth = this.canvas.width;
         const canvasHeight = this.canvas.height;
-        ctx.fillStyle = 'rgba(37, 99, 235, 0.3)';
+        ctx.fillStyle = 'rgba(37, 99, 235, 0.15)';
+        
         this.particles.forEach(particle => {
             particle.x += particle.vx;
             particle.y += particle.vy;
             
-            if (particle.x < 0 || particle.x > canvasWidth) particle.vx *= -1;
-            if (particle.y < 0 || particle.y > canvasHeight) particle.vy *= -1;
+            // Wrap around edges
+            if (particle.x < 0) particle.x = canvasWidth;
+            if (particle.x > canvasWidth) particle.x = 0;
+            if (particle.y < 0) particle.y = canvasHeight;
+            if (particle.y > canvasHeight) particle.y = 0;
             
             ctx.beginPath();
             ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
@@ -103,55 +95,10 @@ class CanvasBackground {
     }
 }
 
-// Enhanced Canvas Background with PDF-themed animations
+// Lightweight Canvas Background - simplified version
 class EnhancedCanvasBackground extends CanvasBackground {
-    private pdfIcons: Array<{x: number, y: number, vx: number, vy: number, size: number, type: string}> = [];
-
-    protected createParticles(): void {
-        super.createParticles();
-        
-        // Add PDF icon particles
-        if (!this.canvas) return;
-        const iconCount = Math.floor((window.innerWidth * window.innerHeight) / 50000);
-        this.pdfIcons = [];
-        
-        const iconTypes = ['📖', '📊', '📚'];
-        for (let i = 0; i < iconCount; i++) {
-            this.pdfIcons.push({
-                x: Math.random() * this.canvas.width,
-                y: Math.random() * this.canvas.height,
-                vx: (Math.random() - 0.5) * 0.3,
-                vy: (Math.random() - 0.5) * 0.3,
-                size: Math.random() * 20 + 15,
-                type: iconTypes[Math.floor(Math.random() * iconTypes.length)]
-            });
-        }
-    }
-
-    protected animate(): void {
-        if (!this.ctx || !this.canvas) return;
-        
-        super.animate();
-        
-        // Draw PDF icons with glow effect
-        this.ctx.save();
-        this.pdfIcons.forEach(icon => {
-            icon.x += icon.vx;
-            icon.y += icon.vy;
-            
-            if (icon.x < 0 || icon.x > this.canvas!.width) icon.vx *= -1;
-            if (icon.y < 0 || icon.y > this.canvas!.height) icon.vy *= -1;
-            
-            // Glow effect
-            this.ctx!.shadowBlur = 20;
-            this.ctx!.shadowColor = 'rgba(37, 99, 235, 0.5)';
-            this.ctx!.font = `${icon.size}px Arial`;
-            this.ctx!.fillText(icon.type, icon.x, icon.y);
-        });
-        this.ctx.restore();
-        
-        this.animationId = requestAnimationFrame(() => this.animate());
-    }
+    // Removed all heavy effects: network nodes, PDF icons, mouse tracking, waves
+    // Just use the simple particle system from parent class
 }
 
 // PDF Modal Manager
@@ -214,11 +161,27 @@ class PDFModalManager {
     private open(pdfSrc: string): void {
         if (!this.modal || !this.viewer) return;
 
-        // Set PDF source with proper path handling
+        // Set PDF source with proper path handling for GitHub Pages
         let finalSrc = pdfSrc;
+        
+        // Handle Jekyll relative_url filter output
+        if (pdfSrc.includes('{{')) {
+            // If it's a Jekyll template, it will be processed by Jekyll
+            // But if we're in the browser, we need to handle it
+            finalSrc = pdfSrc.replace(/{{.*?\|.*?}}/g, '').trim();
+        }
+        
+        // Ensure path starts with / if it's a relative path
         if (!pdfSrc.startsWith('http') && !pdfSrc.startsWith('/')) {
             finalSrc = '/' + pdfSrc;
         }
+        
+        // For GitHub Pages with baseurl, ensure we have the correct path
+        const baseurl = '/lossless-bayesian-networks';
+        if (finalSrc.startsWith('/') && !finalSrc.startsWith(baseurl) && !finalSrc.startsWith('http')) {
+            finalSrc = baseurl + finalSrc;
+        }
+        
         this.viewer.src = finalSrc + '#toolbar=1&navpanes=1&scrollbar=1';
 
         // Show modal
@@ -525,120 +488,18 @@ class AnimationObserver {
     }
 }
 
-// Parallax effect for hero section
-class ParallaxEffect {
-    private hero: HTMLElement | null;
+// Removed ParallaxEffect - resource intensive
 
-    constructor() {
-        this.hero = document.querySelector('.hero');
-        this.init();
-    }
+// Removed CursorEffects class - too resource intensive
+// Using default browser cursor instead
 
-    private init(): void {
-        if (!this.hero) return;
-
-        window.addEventListener('scroll', () => {
-            const scrolled = window.pageYOffset;
-            const rate = scrolled * 0.5;
-            
-            const heroPattern = this.hero?.querySelector('.hero-pattern') as HTMLElement;
-            if (heroPattern) {
-                heroPattern.style.transform = `translateY(${rate}px)`;
-            }
-        });
-    }
-}
-
-// Mouse cursor effects
-class CursorEffects {
-    private cursor: HTMLElement | null = null;
-    private cursorFollower: HTMLElement | null = null;
-
-    constructor() {
-        this.createCursor();
-        this.init();
-    }
-
-    private createCursor(): void {
-        this.cursor = document.createElement('div');
-        this.cursor.className = 'custom-cursor';
-        this.cursor.style.cssText = `
-            width: 10px;
-            height: 10px;
-            border: 2px solid var(--primary-color);
-            border-radius: 50%;
-            position: fixed;
-            pointer-events: none;
-            z-index: 9999;
-            transition: transform 0.1s ease;
-            display: none;
-        `;
-        
-        this.cursorFollower = document.createElement('div');
-        this.cursorFollower.className = 'cursor-follower';
-        this.cursorFollower.style.cssText = `
-            width: 30px;
-            height: 30px;
-            border: 1px solid rgba(99, 102, 241, 0.3);
-            border-radius: 50%;
-            position: fixed;
-            pointer-events: none;
-            z-index: 9998;
-            transition: all 0.3s ease;
-            display: none;
-        `;
-        
-        document.body.appendChild(this.cursor);
-        document.body.appendChild(this.cursorFollower);
-    }
-
-    private init(): void {
-        // Only enable on desktop
-        if (window.matchMedia('(pointer: fine)').matches) {
-            this.cursor!.style.display = 'block';
-            this.cursorFollower!.style.display = 'block';
-            
-            document.addEventListener('mousemove', (e) => {
-                if (this.cursor && this.cursorFollower) {
-                    this.cursor.style.left = `${e.clientX}px`;
-                    this.cursor.style.top = `${e.clientY}px`;
-                    
-                    setTimeout(() => {
-                        this.cursorFollower!.style.left = `${e.clientX - 15}px`;
-                        this.cursorFollower!.style.top = `${e.clientY - 15}px`;
-                    }, 100);
-                }
-            });
-
-            // Hover effects
-            const interactiveElements = document.querySelectorAll('a, button, .btn, .feature-card, .doc-card');
-            interactiveElements.forEach(el => {
-                el.addEventListener('mouseenter', () => {
-                    if (this.cursor && this.cursorFollower) {
-                        this.cursor.style.transform = 'scale(1.5)';
-                        this.cursorFollower.style.transform = 'scale(1.5)';
-                        this.cursorFollower.style.borderColor = 'rgba(99, 102, 241, 0.6)';
-                    }
-                });
-                
-                el.addEventListener('mouseleave', () => {
-                    if (this.cursor && this.cursorFollower) {
-                        this.cursor.style.transform = 'scale(1)';
-                        this.cursorFollower.style.transform = 'scale(1)';
-                        this.cursorFollower.style.borderColor = 'rgba(99, 102, 241, 0.3)';
-                    }
-                });
-            });
-        }
-    }
-}
-
-// Particle System for Background
+// Lightweight Particle System - reduced particle count
 class ParticleSystem {
     private container: HTMLElement | null;
     private particles: Particle[] = [];
-    private particleCount: number = 50;
+    private particleCount: number = 15; // Reduced from 50
     private animationId: number | null = null;
+    private frameCount: number = 0;
 
     constructor() {
         this.container = document.getElementById('particles');
@@ -648,7 +509,7 @@ class ParticleSystem {
     private init(): void {
         if (!this.container) return;
 
-        // Create particles
+        // Create fewer particles
         for (let i = 0; i < this.particleCount; i++) {
             const particle = new Particle(this.container);
             this.particles.push(particle);
@@ -659,9 +520,13 @@ class ParticleSystem {
     }
 
     private animate(): void {
-        this.particles.forEach(particle => {
-            particle.update();
-        });
+        this.frameCount++;
+        // Update only every other frame for better performance
+        if (this.frameCount % 2 === 0) {
+            this.particles.forEach(particle => {
+                particle.update();
+            });
+        }
 
         this.animationId = requestAnimationFrame(() => this.animate());
     }
@@ -751,34 +616,7 @@ class ScrollProgress {
     }
 }
 
-// Magnetic Button Effect
-class MagneticButtons {
-    private buttons: NodeListOf<HTMLElement>;
-
-    constructor() {
-        this.buttons = document.querySelectorAll('.magnetic-btn');
-        this.init();
-    }
-
-    private init(): void {
-        this.buttons.forEach(button => {
-            button.addEventListener('mousemove', (e) => {
-                const rect = button.getBoundingClientRect();
-                const x = e.clientX - rect.left - rect.width / 2;
-                const y = e.clientY - rect.top - rect.height / 2;
-
-                const moveX = x * 0.3;
-                const moveY = y * 0.3;
-
-                button.style.transform = `translate(${moveX}px, ${moveY}px) scale(1.05)`;
-            });
-
-            button.addEventListener('mouseleave', () => {
-                button.style.transform = 'translate(0, 0) scale(1)';
-            });
-        });
-    }
-}
+// Removed MagneticButtons - resource intensive
 
 // Stagger Animation Manager
 class StaggerAnimation {
@@ -850,11 +688,11 @@ document.addEventListener('DOMContentLoaded', () => {
     new TabManager();
     new ClipboardManager();
     new AnimationObserver();
-    new ParallaxEffect();
-    new CursorEffects();
+    // Removed ParallaxEffect - resource intensive
+    // Removed CursorEffects - resource intensive
     new ParticleSystem();
     new ScrollProgress();
-    new MagneticButtons();
+    // Removed MagneticButtons - resource intensive
     new StaggerAnimation();
     new PDFModalManager();
     
@@ -917,17 +755,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
-    // Add parallax effect to hero background on scroll
-    let lastScroll = 0;
-    window.addEventListener('scroll', () => {
-        const currentScroll = window.pageYOffset;
-        const hero = document.querySelector('.hero-background');
-        if (hero) {
-            const rate = currentScroll * 0.3;
-            (hero as HTMLElement).style.transform = `translateY(${rate}px)`;
-        }
-        lastScroll = currentScroll;
-    });
+    // Removed parallax effect - resource intensive
     
     // Add loading class for smooth page load
     document.body.classList.add('loading');

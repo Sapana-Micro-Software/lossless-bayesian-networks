@@ -68,11 +68,33 @@ jobs:
             echo "⚠ Warning: Reference manual PDF not found"
           fi
 
+      - name: Compile Supplementary Material
+        run: |
+          cd docs
+          echo "Compiling supplementary material..."
+          pdflatex -interaction=nonstopmode supplementary_material.tex || true
+          pdflatex -interaction=nonstopmode supplementary_material.tex || true
+          if [ -f "supplementary_material.pdf" ]; then
+            echo "✓ Supplementary material compiled successfully"
+          else
+            echo "⚠ Warning: Supplementary material PDF not found"
+          fi
+
       - name: Verify PDFs
         run: |
           cd docs
+          echo "Checking for compiled PDFs..."
+          expected_pdfs=("lossless_bayesian_networks.pdf" "presentation.pdf" "reference_manual.pdf" "supplementary_material.pdf")
+          for pdf in "${expected_pdfs[@]}"; do
+            if [ -f "$pdf" ]; then
+              echo "✓ Found $pdf"
+              ls -lh "$pdf"
+            else
+              echo "⚠ Warning: $pdf not found"
+            fi
+          done
           pdf_count=$(ls -1 *.pdf 2>/dev/null | wc -l)
-          echo "Found $pdf_count PDF file(s)"
+          echo "Total: $pdf_count PDF file(s) found"
           if [ $pdf_count -eq 0 ]; then
             echo "⚠ Warning: No PDFs found, but continuing..."
           fi
