@@ -6,10 +6,10 @@
 
 // Canvas Background Animation
 class CanvasBackground {
-    private canvas: HTMLCanvasElement | null = null;
-    private ctx: CanvasRenderingContext2D | null = null;
-    private animationId: number | null = null;
-    private particles: Array<{x: number, y: number, vx: number, vy: number, size: number}> = [];
+    protected canvas: HTMLCanvasElement | null = null;
+    protected ctx: CanvasRenderingContext2D | null = null;
+    protected animationId: number | null = null;
+    protected particles: Array<{x: number, y: number, vx: number, vy: number, size: number}> = [];
 
     constructor() {
         const canvasElement = document.getElementById('backgroundCanvas') as HTMLCanvasElement;
@@ -22,20 +22,20 @@ class CanvasBackground {
         this.init();
     }
 
-    private init(): void {
+    protected init(): void {
         this.resize();
         window.addEventListener('resize', () => this.resize());
         this.createParticles();
         this.animate();
     }
 
-    private resize(): void {
+    protected resize(): void {
         if (!this.canvas) return;
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
     }
 
-    private createParticles(): void {
+    protected createParticles(): void {
         if (!this.canvas) return;
         const particleCount = Math.floor((window.innerWidth * window.innerHeight) / 15000);
         this.particles = [];
@@ -51,7 +51,7 @@ class CanvasBackground {
         }
     }
 
-    private animate(): void {
+    protected animate(): void {
         if (!this.ctx || !this.canvas) return;
         
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -100,6 +100,147 @@ class CanvasBackground {
         if (this.animationId) {
             cancelAnimationFrame(this.animationId);
         }
+    }
+}
+
+// Enhanced Canvas Background with PDF-themed animations
+class EnhancedCanvasBackground extends CanvasBackground {
+    private pdfIcons: Array<{x: number, y: number, vx: number, vy: number, size: number, type: string}> = [];
+
+    protected createParticles(): void {
+        super.createParticles();
+        
+        // Add PDF icon particles
+        if (!this.canvas) return;
+        const iconCount = Math.floor((window.innerWidth * window.innerHeight) / 50000);
+        this.pdfIcons = [];
+        
+        const iconTypes = ['📖', '📊', '📚'];
+        for (let i = 0; i < iconCount; i++) {
+            this.pdfIcons.push({
+                x: Math.random() * this.canvas.width,
+                y: Math.random() * this.canvas.height,
+                vx: (Math.random() - 0.5) * 0.3,
+                vy: (Math.random() - 0.5) * 0.3,
+                size: Math.random() * 20 + 15,
+                type: iconTypes[Math.floor(Math.random() * iconTypes.length)]
+            });
+        }
+    }
+
+    protected animate(): void {
+        if (!this.ctx || !this.canvas) return;
+        
+        super.animate();
+        
+        // Draw PDF icons with glow effect
+        this.ctx.save();
+        this.pdfIcons.forEach(icon => {
+            icon.x += icon.vx;
+            icon.y += icon.vy;
+            
+            if (icon.x < 0 || icon.x > this.canvas!.width) icon.vx *= -1;
+            if (icon.y < 0 || icon.y > this.canvas!.height) icon.vy *= -1;
+            
+            // Glow effect
+            this.ctx!.shadowBlur = 20;
+            this.ctx!.shadowColor = 'rgba(37, 99, 235, 0.5)';
+            this.ctx!.font = `${icon.size}px Arial`;
+            this.ctx!.fillText(icon.type, icon.x, icon.y);
+        });
+        this.ctx.restore();
+        
+        this.animationId = requestAnimationFrame(() => this.animate());
+    }
+}
+
+// PDF Modal Manager
+class PDFModalManager {
+    private modal: HTMLElement | null = null;
+    private overlay: HTMLElement | null = null;
+    private closeBtn: HTMLElement | null = null;
+    private viewer: HTMLIFrameElement | null = null;
+    private previewButtons: NodeListOf<HTMLElement> | null = null;
+
+    constructor() {
+        this.modal = document.getElementById('pdfModal');
+        this.overlay = this.modal?.querySelector('.pdf-modal-overlay') as HTMLElement;
+        this.closeBtn = document.getElementById('pdfModalClose');
+        this.viewer = document.getElementById('pdfViewer') as HTMLIFrameElement;
+        this.previewButtons = document.querySelectorAll('.btn-pdf-preview') as NodeListOf<HTMLElement>;
+
+        this.init();
+    }
+
+    private init(): void {
+        if (!this.modal || !this.closeBtn || !this.viewer) return;
+
+        // Close button
+        this.closeBtn.addEventListener('click', () => this.close());
+
+        // Overlay click to close
+        this.overlay?.addEventListener('click', () => this.close());
+
+        // Escape key to close
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.modal?.classList.contains('active')) {
+                this.close();
+            }
+        });
+
+        // Preview buttons
+        this.previewButtons?.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                const pdfSrc = button.getAttribute('data-pdf-src');
+                if (pdfSrc) {
+                    this.open(pdfSrc);
+                }
+            });
+        });
+
+        // Add hover effects to PDF cards
+        const pdfCards = document.querySelectorAll('.pdf-card');
+        pdfCards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.classList.add('pdf-card-hover');
+            });
+            card.addEventListener('mouseleave', () => {
+                card.classList.remove('pdf-card-hover');
+            });
+        });
+    }
+
+    private open(pdfSrc: string): void {
+        if (!this.modal || !this.viewer) return;
+
+        // Set PDF source with proper path handling
+        let finalSrc = pdfSrc;
+        if (!pdfSrc.startsWith('http') && !pdfSrc.startsWith('/')) {
+            finalSrc = '/' + pdfSrc;
+        }
+        this.viewer.src = finalSrc + '#toolbar=1&navpanes=1&scrollbar=1';
+
+        // Show modal
+        this.modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        // Add entrance animation
+        setTimeout(() => {
+            this.modal?.classList.add('modal-visible');
+        }, 10);
+    }
+
+    private close(): void {
+        if (!this.modal || !this.viewer) return;
+
+        this.modal.classList.remove('active', 'modal-visible');
+        document.body.style.overflow = '';
+
+        // Clear iframe after animation
+        setTimeout(() => {
+            this.viewer!.src = '';
+        }, 300);
     }
 }
 
@@ -704,7 +845,7 @@ document.head.appendChild(style);
 
 // Initialize everything when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    new CanvasBackground();
+    new EnhancedCanvasBackground();
     new Navigation();
     new TabManager();
     new ClipboardManager();
@@ -715,6 +856,7 @@ document.addEventListener('DOMContentLoaded', () => {
     new ScrollProgress();
     new MagneticButtons();
     new StaggerAnimation();
+    new PDFModalManager();
     
     // Add smooth page load animation
     document.body.style.opacity = '0';

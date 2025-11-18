@@ -76,6 +76,13 @@ jobs:
           bundle exec jekyll build --baseurl /lossless-bayesian-networks --trace
         continue-on-error: false
 
+      - name: Copy PDFs to site
+        run: |
+          mkdir -p _site/docs
+          cp docs/*.pdf _site/docs/ 2>/dev/null || echo "No PDFs found in docs/"
+          echo "✓ PDFs copied to _site/docs/"
+          ls -lh _site/docs/*.pdf 2>/dev/null || echo "No PDFs in _site/docs/"
+
       - name: Ensure .nojekyll exists
         run: |
           touch _site/.nojekyll || true
